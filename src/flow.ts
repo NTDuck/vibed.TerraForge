@@ -26,6 +26,8 @@ export async function runPurchase(assetId: string, tierId: string, method: strin
   commit((s) => setPurchaseStep(s, 'issuing'));
   await wait(500);
 
+  // dec: issueLicense returns the mutated state (licenses+sales+balances+txs) — it must be
+  // committed before setPurchaseStep or the license record never enters the container.
   const s = getState();
   const res = issueLicense(s, s.session ?? '', assetId, tierId, method);
   if (res.error || !res.license) {
@@ -34,7 +36,8 @@ export async function runPurchase(assetId: string, tierId: string, method: strin
     notify('err', err);
     return;
   }
+  const issued = res.state;
   const lic = res.license;
-  commit((st) => setPurchaseStep(st, 'done', { licenseId: lic.id }));
+  commit((st) => setPurchaseStep({ ...st, licenses: issued.licenses, sales: issued.sales, txs: issued.txs, users: issued.users }, 'done', { licenseId: lic.id }));
   notify('ok', `License NFT issued — serial #${lic.serial} · ${lic.txHash}`);
 }
