@@ -1,0 +1,16 @@
+{
+  "name": "senchain-mockup",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "bun test",
+    "build": "bun build src/main.ts --outdir dist --minify",
+    "serve": "bun serve.ts",
+    "dev": "bun run build && bun run serve"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.2",
+    "bun-types": "^1.4.2"
+  }
+}
