@@ -13,7 +13,7 @@ function stepsIndicator(purchase: PurchaseState): HTMLElement {
   const idx = STEP_NAMES.indexOf(purchase.step);
   return h('div', { class: 'steps' },
     STEP_NAMES.slice(0, -1).map((name, i) =>
-      h('span', { class: `step${purchase.step === name ? ' now' : idx > i ? ' done' : ''}` }, name)),
+      h('span', { class: `step${purchase.step === name ? ' now' : idx > i ? ' done' : ''}`, 'data-n': String(i + 1) }, name)),
   );
 }
 
@@ -61,12 +61,12 @@ function purchasePanel(asset: Asset, tier: LicenseTier): HTMLElement {
     const lic = s.licenses.find((l) => l.id === p.licenseId);
     const table = splitsTable(p, asset.id);
     return h('div', { class: 'banner' },
-      h('strong', {}, 'License issued 🎉'),
+      h('strong', {}, 'License issued'),
       lic
         ? h('p', { class: 'sm' }, 'Serial ', h('code', {}, `#${lic.serial}`), ' · tx ', h('code', {}, lic.txHash), ' · ', fmtDate(lic.issuedAt))
         : h('p', { class: 'sm faint' }, 'License record not found.'),
       table ?? h('p', { class: 'sm faint' }, 'No split record.'),
-      h('div', { class: 'row', style: 'margin-top:10px' },
+      h('div', { class: 'row', style: 'margin-top: var(--space-3)' },
         h('button', { class: 'btn sm accent', onclick: () => navTo('dashboard') }, 'View in dashboard'),
         h('button', { class: 'btn sm ghost', onclick: () => commit((st) => ({ ...st, purchase: null })) }, 'Close'),
       ));
@@ -97,7 +97,7 @@ function purchasePanel(asset: Asset, tier: LicenseTier): HTMLElement {
     ),
     h('div', { class: 'field' }, h('label', {}, 'Fiat method'), methodSel),
     h('label', { class: 'row sm' }, failBox, 'Simulate declined payment'),
-    h('div', { class: 'row', style: 'margin-top:12px' },
+    h('div', { class: 'row', style: 'margin-top: var(--space-3)' },
       h('button', {
         class: 'btn accent',
         disabled: p.step !== 'summary',
@@ -120,16 +120,16 @@ function tierCard(asset: Asset, tier: LicenseTier): HTMLElement {
     commit((st) => startPurchase(st, asset.id, tier.id));
     navTo('asset', asset.id); // dec: re-render so the purchase panel replaces the tier list
   };
-  return h('div', { class: 'card' },
+  return h('div', { class: 'card flow' },
     h('div', { class: 'row spread' },
       h('h3', {}, tier.name),
-      h('strong', {}, fmt(tier.priceVnd)),
+      h('strong', { class: 'mono' }, fmt(tier.priceVnd)),
     ),
     h('p', { class: 'sm muted' }, `${tier.seats} seat${tier.seats === 1 ? '' : 's'}`),
     rightsRow(tier.rights),
     s.session
-      ? h('button', { class: 'btn accent', style: 'margin-top:10px', onclick: buy }, 'Buy license')
-      : h('p', { class: 'banner warn sm', style: 'margin-top:10px' },
+      ? h('button', { class: 'btn accent', onclick: buy }, 'Buy license')
+      : h('p', { class: 'banner warn sm' },
           'Sign in as a buyer to purchase (use the wallet button in the top bar).'),
   );
 }
@@ -141,7 +141,7 @@ export function renderAsset(id: string): HTMLElement {
     return h('section', { class: 'wrap' },
       h('div', { class: 'banner err' }, 'Asset not found'),
       h('p', {},
-        h('button', { class: 'btn sm', onclick: () => navTo('market') }, '← Back to market')),
+        h('button', { class: 'btn sm ghost', onclick: () => navTo('market') }, '← Market')),
     );
   }
 
@@ -151,24 +151,24 @@ export function renderAsset(id: string): HTMLElement {
   const purchaseActive = s.purchase?.assetId === asset.id;
   const activeTier = purchaseActive ? asset.tiers.find((t) => t.id === s.purchase!.tierId) : undefined;
 
-  const left = h('div', { class: 'card' },
-    h('div', { class: 'preview' }, glyphFor(asset.kind, 96)),
-    h('h1', {}, asset.name),
-    h('p', { class: 'muted' }, asset.blurb),
-    h('p', { class: 'sm' }, 'Creator: ', h('strong', {}, creator?.name ?? asset.creatorId)),
-    h('p', { class: 'sm' }, 'Model: ', h('code', {}, asset.model)),
-    h('div', { class: 'card', style: 'margin-top:12px' },
-      h('h3', {}, 'AI Provenance ', h('span', { class: 'faint sm' }, v.model)),
-      h('div', { class: 'row' }, verifChip(v.status)),
-      v.reasons?.length
-        ? h('ul', { class: 'sm muted' }, v.reasons.map((r) => h('li', {}, r)))
-        : null,
-      h('div', { class: 'kv sm' },
+  // dec: left column is two sibling cards (detail + passport) — no nested card-in-card
+  const left = h('div', { class: 'flow' },
+    h('div', { class: 'card' },
+      h('div', { class: 'preview' }, glyphFor(asset.kind, 96)),
+      h('h1', {}, asset.name),
+      h('p', { class: 'muted' }, asset.blurb),
+      h('dl', { class: 'kv' },
+        h('dt', {}, 'Creator'), h('dd', {}, creator?.name ?? asset.creatorId),
+        h('dt', {}, 'Model'), h('dd', {}, asset.model),
         h('dt', {}, 'Similarity'), h('dd', {}, `${v.similarity.toFixed(1)}%`),
         h('dt', {}, 'Traceability'), h('dd', {}, `${v.traceability.toFixed(0)}%`),
       ),
+      v.reasons?.length
+        ? h('ul', { class: 'sm muted' }, v.reasons.map((r) => h('li', {}, r)))
+        : null,
+      h('div', { class: 'row' }, verifChip(v.status)),
     ),
-    h('div', { class: 'card', style: 'margin-top:12px' },
+    h('div', { class: 'card' },
       h('h3', {}, 'Compatibility passport'),
       asset.passport.platforms.length || asset.passport.formats.length
         ? h('div', { class: 'row' },
@@ -178,22 +178,26 @@ export function renderAsset(id: string): HTMLElement {
     ),
   );
 
-  const right = h('div', { class: 'card' },
-    h('h3', {}, 'Mint status'),
-    minted
-      ? h('p', { class: 'sm' }, 'Token ', h('code', {}, asset.tokenId!), ' · tx ', h('code', {}, asset.mintTx ?? '—'))
-      : h('p', { class: 'faint sm' }, 'not minted'),
+  // dec: right column stacks mint status and each tier as its own card
+  const tierBlocks = asset.tiers.map((t) => tierCard(asset, t));
+  const right = h('div', { class: 'flow' },
+    h('div', { class: 'card' },
+      h('h3', {}, 'Mint status'),
+      minted
+        ? h('p', { class: 'sm' }, 'Token ', h('code', {}, asset.tokenId!), ' · tx ', h('code', {}, asset.mintTx ?? '—'))
+        : h('p', { class: 'faint sm' }, 'not minted'),
+    ),
     h('h2', {}, 'License tiers'),
     purchaseActive
       ? (activeTier ? purchasePanel(asset, activeTier) : h('div', { class: 'banner err' }, 'Purchase tier missing.'))
-      : asset.tiers.length
-        ? asset.tiers.map((t) => tierCard(asset, t))
+      : tierBlocks.length
+        ? tierBlocks
         : h('p', { class: 'faint' }, 'No tiers configured for this asset yet.'),
   );
 
   return h('section', { class: 'wrap' },
     h('p', {},
-      h('a', { href: '#/market', onclick: (e: MouseEvent) => { e.preventDefault(); navTo('market'); } }, '← Back to market')),
+      h('a', { class: 'btn ghost sm', href: '#/market', onclick: (e: MouseEvent) => { e.preventDefault(); navTo('market'); } }, '← Market')),
     h('div', { class: 'grid two' }, left, right),
   );
 }

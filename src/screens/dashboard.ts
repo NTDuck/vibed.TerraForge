@@ -47,7 +47,7 @@ const licenseCard = (s: State, lic: LicenseNft): HTMLElement => {
   if (!asset || !tier) return empty(`License ${lic.id} references a missing asset/tier.`);
   // dec: resale price input kept per-card via closure. Default is the tier list price.
   const priceInput = h('input', {
-    class: 'field', type: 'number', min: 0, step: 1000, value: String(tier.priceVnd),
+    type: 'number', min: 0, step: 1000, value: String(tier.priceVnd),
     'aria-label': 'Resale price (VND)',
   }) as HTMLInputElement;
 
@@ -72,68 +72,71 @@ const licenseCard = (s: State, lic: LicenseNft): HTMLElement => {
   };
 
   const head = h('div', { class: 'row spread' },
-    h('b', {}, asset.name),
+    h('h3', { class: 'grow' }, asset.name),
     h('span', { class: 'chip' }, tier.name));
 
-  const serialLine = h('div', { class: 'sm muted' },
-    'Serial ', h('code', {}, `#${lic.serial}`), ' · tx ',
-    h('code', {}, lic.txHash));
-
-  const issued = h('div', { class: 'sm faint' }, `Issued ${fmtDate(lic.issuedAt)}`);
+  // dec: kv dl — dt faint, dd mono per .kv. Serial/tx/issued share one panel.
+  const serialLine = h('dl', { class: 'kv' },
+    h('dt', {}, 'Serial'), h('dd', {}, `#${lic.serial}`),
+    h('dt', {}, 'Tx'), h('dd', {}, lic.txHash),
+    h('dt', {}, 'Issued'), h('dd', {}, fmtDate(lic.issuedAt)));
 
   const resale = tier.rights.resale
     ? h('div', {},
-        h('h4', { class: 'sm' }, 'Resale'),
-        h('div', { class: 'row' },
-          priceInput,
-          h('span', { class: 'faint sm' }, '₫'),
-          h('button', { class: 'btn sm', onclick: doTransfer }, 'Transfer to Chị Phạm')),
+        h('div', { class: 'field' },
+          h('label', {}, 'Resale price'),
+          h('div', { class: 'row' },
+            priceInput,
+            h('button', { class: 'btn sm', onclick: doTransfer }, 'Transfer to Chị Phạm'))),
         h('p', { class: 'sm faint' },
           'Demo transfer to the reviewer persona — 10% royalty routes back to the creator on-chain.'))
     : null;
 
   const usageBox = h('div', {},
-    h('h4', { class: 'sm' }, 'Usage checker'),
-    h('div', { class: 'row' },
-      h('select', {
-        class: 'field',
-        onchange: (e: Event) => { usage = (e.target as HTMLSelectElement).value as Usage; },
-      }, ...USAGES.map((u) => h('option', { value: u }, USAGE_LABEL[u]))),
-      h('button', { class: 'btn ghost sm', onclick: checkPermit }, 'Check permit'),
-      usageVerdict(s.txs, lic.id)));
+    h('div', { class: 'field' },
+      h('label', {}, 'Usage checker'),
+      h('div', { class: 'row' },
+        h('select', {
+          'aria-label': 'Usage to check',
+          onchange: (e: Event) => { usage = (e.target as HTMLSelectElement).value as Usage; },
+        }, ...USAGES.map((u) => h('option', { value: u }, USAGE_LABEL[u]))),
+        h('button', { class: 'btn ghost sm', onclick: checkPermit }, 'Check permit'),
+        usageVerdict(s.txs, lic.id))));
 
-  return h('div', { class: 'card' }, head, serialLine, issued, rightsMatrix(tier.rights), resale, usageBox);
+  return h('div', { class: 'card' }, head, serialLine, rightsMatrix(tier.rights), resale, usageBox);
 };
 
+/** dec: creator royalties ledger — kind mirrors the split that paid me:
+ * primary sale → creator split, resale → royalty split. */
 const saleRow = (s: State, sale: Sale, cut: number): HTMLElement => {
   const asset = s.assets.find((a) => a.id === sale.assetId);
   return h('tr', {},
     h('td', {}, asset?.name ?? sale.assetId),
+    h('td', {},
+      h('span', { class: `chip ${sale.primary ? '' : 'chip-chain'}` },
+        sale.primary ? 'creator' : 'royalty')),
     h('td', {}, s.users[sale.buyerId]?.name ?? sale.buyerId),
-    h('td', { class: 'faint sm' }, fmtDate(sale.ts)),
-    h('td', { class: 'mono', style: 'text-align:right' }, fmt(sale.grossVnd)),
-    h('td', { class: 'mono', style: 'text-align:right' }, fmt(cut)));
+    h('td', { class: 'amount' }, fmt(cut)),
+    h('td', { class: 'faint sm' }, fmtDate(sale.ts)));
 };
 
-function royaltiesCard(s: State): HTMLElement {
+function royaltiesLedger(s: State): HTMLElement {
   const rows = s.sales
     .map((sale) => ({ sale, cut: creatorCutOf(s, sale) }))
     .filter((r): r is { sale: Sale; cut: number } => r.cut != null);
   if (rows.length === 0) return empty('No sales yet — list an asset on the Market and royalties will land here.');
   const lifetime = rows.reduce((sum, r) => sum + r.cut, 0);
 
-  const table = h('table', { class: 'ledger' },
+  return h('table', { class: 'ledger' },
     h('thead', {}, h('tr', {},
-      h('th', {}, 'Sale'), h('th', {}, 'Buyer'), h('th', {}, 'When'),
-      h('th', { style: 'text-align:right' }, 'Gross'),
-      h('th', { style: 'text-align:right' }, 'My cut'))),
-    h('tbody', {}, ...rows.map((r) => saleRow(s, r.sale, r.cut))));
-
-  const totals = h('div', { class: 'row spread', style: 'margin-top:10px' },
-    h('b', {}, 'Lifetime earnings'),
-    h('b', { class: 'mono' }, fmt(lifetime)));
-
-  return h('div', { class: 'card' }, table, totals);
+      h('th', {}, 'Asset'), h('th', {}, 'Kind'), h('th', {}, 'Buyer'),
+      h('th', { class: 'amount' }, 'My cut'), h('th', {}, 'When'))),
+    h('tbody', {}, ...rows.map((r) => saleRow(s, r.sale, r.cut))),
+    // dec: totals derive from the rows above — no hardcoded figures.
+    h('tfoot', {}, h('tr', {},
+      h('td', { colspan: 3 }, h('b', {}, 'Lifetime earnings')),
+      h('td', { class: 'amount' }, h('b', {}, fmt(lifetime))),
+      h('td', {}))));
 }
 
 function myAssetsCard(s: State): HTMLElement {
@@ -154,7 +157,7 @@ function myAssetsCard(s: State): HTMLElement {
 function creatorSection(s: State): HTMLElement {
   return h('div', {},
     h('h2', {}, 'Royalties'),
-    royaltiesCard(s),
+    royaltiesLedger(s),
     h('h2', {}, 'My assets'),
     myAssetsCard(s));
 }
@@ -163,14 +166,15 @@ function reviewerSection(s: State): HTMLElement {
   const queue = s.assets.filter((a) => a.verification.status === 'needs-review');
   return h('div', {},
     h('h2', {}, 'Review queue'),
-    h('div', { class: 'card row spread' },
-      h('div', {},
-        h('b', {}, 'Cultural review'),
-        h('p', { class: 'sm muted' }, 'Assets flagged by the AI scanner wait for your verdict.')),
-      h('div', { class: 'row' },
-        h('span', { class: `chip ${queue.length > 0 ? 'chip-warn' : 'chip-ok'}` },
-          `${queue.length} needs review`),
-        h('button', { class: 'btn sm', onclick: () => navTo('review') }, 'Go to Review tab'))));
+    h('div', { class: 'banner' },
+      h('div', { class: 'row spread' },
+        h('div', {},
+          h('b', {}, 'Cultural review'),
+          h('p', { class: 'sm muted' }, 'Assets flagged by the AI scanner wait for your verdict.')),
+        h('div', { class: 'row' },
+          h('span', { class: `chip ${queue.length > 0 ? 'chip-warn' : 'chip-ok'}` },
+            `${queue.length} needs review`),
+          h('button', { class: 'btn sm', onclick: () => navTo('review') }, 'Go to Review tab')))));
 }
 
 function buyerSection(s: State): HTMLElement {
@@ -181,22 +185,25 @@ function buyerSection(s: State): HTMLElement {
       'Testing the revert path? The declined-payment simulation lives on the asset purchase panel (Market → an asset).'),
     mine.length === 0
       ? empty('No licenses yet — buy one from the Market.')
-      : h('div', { class: 'grid assets' }, ...mine.map((l) => licenseCard(s, l))));
+      : h('div', { class: 'grid two' }, ...mine.map((l) => licenseCard(s, l))));
 }
 
+/** dec: ledger rows — reverted rows carry .reverted so .ledger tints the row. */
 function recentActivity(s: State): HTMLElement {
   if (s.txs.length === 0) return empty('Nothing on the ledger yet — your calls will appear here.');
   const row = (t: Tx): HTMLElement =>
-    h('div', { class: 'row spread' },
-      h('div', {},
-        h('b', { class: 'sm' }, t.label),
-        h('div', { class: 'sm faint' }, fmtDate(t.ts))),
-      h('div', { class: 'row' },
-        onchainChip(t.onChain),
-        t.status === 'reverted' ? h('span', { class: 'chip chip-err' }, 'reverted') : null));
+    h('tr', { class: t.status === 'reverted' ? 'reverted' : undefined },
+      h('td', { class: 'mono' }, fmtDate(t.ts)),
+      h('td', {}, t.label),
+      h('td', {}, onchainChip(t.onChain)),
+      h('td', {},
+        h('span', { class: `chip ${t.status === 'reverted' ? 'chip-err' : 'chip-ok'}` }, t.status)));
   return h('div', {},
     h('h2', {}, 'Recent activity'),
-    h('div', { class: 'card' }, ...s.txs.slice(0, 6).map(row)));
+    h('table', { class: 'ledger' },
+      h('thead', {}, h('tr', {},
+        h('th', {}, 'Time'), h('th', {}, 'Call'), h('th', {}, 'Ledger'), h('th', {}, 'Status'))),
+      h('tbody', {}, ...s.txs.slice(0, 6).map(row))));
 }
 
 export function renderDashboard(): HTMLElement {
@@ -219,7 +226,7 @@ export function renderDashboard(): HTMLElement {
 
   return h('section', { class: 'wrap' },
     h('h1', {}, 'Dashboard'),
-    h('p', { class: 'muted' }, `Signed in as ${me.name} (${me.role}).`),
+    h('p', { class: 'muted' }, 'Signed in as ', h('b', {}, me.name), ` (${me.role}).`),
     roleSection,
     recentActivity(s));
 }

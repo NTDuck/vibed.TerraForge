@@ -1,13 +1,14 @@
 import { commit, getState } from '../app';
 import { mint, resolveVerification, submitAsset } from '../store';
 import { CONFIG } from '../config';
+import { glyphFor } from '../lib/glyph';
 import { h, fmtDate, navTo, notify, verifChip, ROLES } from '../ui';
 import type { Asset, AssetKind } from '../types';
 
 const KINDS: AssetKind[] = ['character', 'skin', 'accessory', 'artwork', 'audio', 'environment'];
 const MODELS = ['SenDiffusion XL', 'SenDiffusion Sky', 'SonicBloom v2', 'VectorMuse 3'];
 
-/** dec: live "22 %" / "92 %" readout — input listener only, no commit/re-render. */
+/** dec: live "22 %" readout — input listener only, no commit/re-render. */
 function bindRange(input: HTMLInputElement, out: HTMLElement): void {
   const sync = (): void => {
     out.textContent = `${input.value} %`;
@@ -16,27 +17,22 @@ function bindRange(input: HTMLInputElement, out: HTMLElement): void {
   sync();
 }
 
-/** dec: band copy interpolates CONFIG thresholds — assess() stays the single source of truth. */
-function gateCopy(): HTMLElement {
+/** dec: three threshold rows — chips interpolate CONFIG verbatim so assess()
+ * stays the single source of truth. The code restates no band numbers. */
+function verificationBands(): HTMLElement {
   const { passBelow, rejectAt } = CONFIG.aiSimilarity;
   const traceMin = CONFIG.sourceTraceabilityMin;
+  const band = (chip: string, text: string): HTMLElement =>
+    h('div', { class: 'row' }, h('span', { class: 'chip' }, chip), h('span', { class: 'sm muted' }, text));
   return h(
     'div',
-    { class: 'banner' },
-    h('h3', null, 'How verification works'),
-    h(
-      'p',
-      { class: 'muted sm' },
-      'Every submission walks the whiteboard §3 pipeline: AI provenance scan → human cultural review → mint.',
+    { class: 'flow' },
+    band(`AI similarity < ${passBelow}%`, 'Machine-verified. The scan clears the asset and mint opens straight away.'),
+    band(
+      `AI similarity ≥ ${passBelow}%`,
+      `Cultural review. A human reviewer weighs the asset before it can go on-chain — from ${rejectAt}% up the scan auto-rejects.`,
     ),
-    h(
-      'ul',
-      { class: 'sm' },
-      h('li', null, `AI similarity < ${passBelow}% → machine-verified, mintable immediately`),
-      h('li', null, `AI similarity ${passBelow}–${rejectAt}% → human cultural review`),
-      h('li', null, `AI similarity ≥ ${rejectAt}% → auto-reject`),
-      h('li', null, `Source traceability < ${traceMin}% → source audit`),
-    ),
+    band(`Traceability < ${traceMin}%`, 'Source audit. Provenance is re-checked before any verdict stands.'),
   );
 }
 
@@ -57,6 +53,7 @@ function uploadForm(): HTMLElement {
     {
       class: 'btn accent',
       type: 'button',
+      style: 'width: 100%',
       onclick: () => {
         if (!name.value.trim()) {
           notify('warn', 'Give the asset a name before submitting.');
@@ -76,7 +73,7 @@ function uploadForm(): HTMLElement {
           return r.state;
         });
         // dec: resolve immediately in a second commit so the asset lands with its
-        // assess() verdict (same bands lib/verification uses) before navigating.
+        // assess() verdict (same bands shown under this form) before navigating.
         let verdictId = '';
         commit((st) => {
           const r = resolveVerification(st, asset!.id);
@@ -99,23 +96,40 @@ function uploadForm(): HTMLElement {
     h('div', { class: 'field' }, h('label', null, 'Generative model'), model),
     h('div', { class: 'field' }, h('label', null, 'AI similarity vs registered works (lower is better)'), h('div', { class: 'range' }, sim, simVal)),
     h('div', { class: 'field' }, h('label', null, 'Source traceability (higher is better)'), h('div', { class: 'range' }, trace, traceVal)),
-    h('div', { class: 'row spread' }, h('span', { class: 'faint sm' }, 'Verdict comes from the same assess() bands shown below.'), submit),
+    h('p', { class: 'faint sm' }, 'Verdict comes from the same assess() bands shown below.'),
+    h('h3', null, 'How verification works'),
+    verificationBands(),
+    h('div', { class: 'field', style: 'margin-top: var(--space-4); margin-bottom: 0' }, submit),
   );
 }
 
+/** dec: one of my uploads — glyph, name, verdict + mint status chips. Rejected
+ * rows surface only the first reason, with a faint "+n more" overflow marker. */
 function uploadRow(a: Asset): HTMLElement {
   const v = a.verification;
   const chips = h('div', { class: 'row' }, verifChip(v.status));
-  if (v.status === 'needs-review') chips.append(h('span', { class: 'chip chip-warn' }, 'Awaiting cultural review'));
+  if (v.status === 'needs-review') chips.append(h('span', { class: 'chip chip-warn' }, 'In review'));
   chips.append(
     a.tokenId
-      ? h('span', { class: 'chip chip-chain' }, `⛓ minted ${a.tokenId}`)
+      ? h('span', { class: 'chip chip-chain' }, `minted ${a.tokenId}`)
       : h('span', { class: 'chip chip-off' }, 'not minted'),
   );
 
-  const right = h('div', { class: 'row' });
+  const card = h(
+    'div',
+    { class: 'card' },
+    h(
+      'div',
+      { class: 'row' },
+      h('div', { class: 'glyph' }, glyphFor(a.kind, 32)),
+      h('strong', { class: 'grow' }, a.name),
+      chips,
+    ),
+  );
+
+  const foot = h('div', { class: 'row' });
   if (v.status === 'verified' && !a.tokenId) {
-    right.append(
+    foot.append(
       h(
         'button',
         {
@@ -134,16 +148,14 @@ function uploadRow(a: Asset): HTMLElement {
       ),
     );
   }
-  right.append(h('span', { class: 'faint sm' }, fmtDate(a.createdAt)));
+  foot.append(h('span', { class: 'faint sm' }, fmtDate(a.createdAt)));
+  card.append(foot);
 
-  const card = h(
-    'div',
-    { class: 'card' },
-    h('div', { class: 'row spread' }, h('strong', null, a.name), right),
-    chips,
-  );
   if (v.status === 'rejected' && v.reasons?.length) {
-    card.append(h('ul', { class: 'sm muted' }, ...v.reasons.map((r) => h('li', null, r))));
+    const more = v.reasons.length - 1;
+    card.append(
+      h('div', { class: 'sm muted' }, v.reasons[0], more > 0 ? h('span', { class: 'faint' }, ` +${more} more`) : null),
+    );
   }
   return card;
 }
@@ -182,7 +194,6 @@ export function renderUpload(): HTMLElement {
         mine.length === 0
           ? h('div', { class: 'card' }, h('p', { class: 'muted sm' }, 'Nothing submitted yet — your uploads will appear here with their verification verdict and mint status.'))
           : h('div', { class: 'grid' }, ...mine.map((a) => uploadRow(a))),
-        gateCopy(),
       ),
     ),
   );

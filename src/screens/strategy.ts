@@ -79,7 +79,7 @@ export function renderStrategy(): HTMLElement {
     h('h2', {}, 'System architecture'),
     h('div', { class: 'grid two' },
       h('div', { class: 'card' },
-        h('div', { class: 'row' }, h('h3', { class: 'grow' }, 'On-chain'), h('span', { class: 'chip chip-chain' }, '⛓ trust layer')),
+        h('div', { class: 'row' }, h('h3', { class: 'grow' }, 'On-chain'), h('span', { class: 'chip chip-chain' }, 'trust layer')),
         sig(`${CONFIG.chain.asset}.register(metadataHash, provenance)`, 'D-2: ownership & provenance hash must be tamper-proof and publicly auditable.'),
         sig(`${CONFIG.chain.license}.issue(assetId, tier, price)`, 'D-3: require !alreadyLicensed && price match — money in, license out, no trusted middleman.'),
         sig(`${CONFIG.chain.enforcer}.permit(licenseId, right)`, 'D-3: the token enforces rights (use/resell/modify) itself, not platform goodwill.'),
@@ -98,7 +98,7 @@ export function renderStrategy(): HTMLElement {
     h('h3', {}, 'Buyer flow'),
     h('div', { class: 'steps' },
       ['Buyer', 'Fiat payment', 'Payment verify', 'LicenseIssuer.issue', 'LicenseNFT'].map((label, i) =>
-        h('span', { class: `step${i === 0 ? ' now' : ''}` }, label),
+        h('span', { class: `step${i === 0 ? ' now' : ''}`, 'data-n': String(i + 1) }, label),
       ),
     ),
     h('p', { class: 'sm faint' }, 'Off-chain steps: fiat gateway + backend verification; on-chain steps: oracle calls LicenseIssuer which mints the LicenseNFT.'),
@@ -141,27 +141,20 @@ export function renderStrategy(): HTMLElement {
 
     // 5 — Development plan (whiteboard §7)
     h('h2', {}, 'Development plan Y0 → Yx'),
-    h('div', { class: 'flow' },
       (
         [
-          ['Y0', 'chip', 'Design + prototype', 'This mockup: full purchase, verification and royalty flows simulated against SenChain Testnet contracts.'],
-          ['Y1', 'chip-ok', 'Testnet pilot', 'Real testnet deployment, onboarding creators, first cultural review board convened.'],
-          ['Y2', 'chip-chain', 'Mainnet + fiat rails', 'Mainnet launch with MoMo/ZaloPay/Napas settlement and an asset passport standard.'],
-          ['Y3', 'chip-warn', 'Cross-platform passport', 'License passports consumed by Unity, Unreal and Godot plugins — the engine enforces rights.'],
-          ['Yx', 'chip-err', 'Governance DAO', 'Protocol fees, review policy and registry upgrades move to a creator/reviewer DAO.'],
-        ] as Array<[string, string, string, string]>
-      ).map(([phase, chip, title, body]) =>
-        h('div', { class: 'card' },
-          h('div', { class: 'row spread' },
-            h('div', { class: 'row' },
-              h('span', { class: `chip ${chip}` }, phase),
-              h('b', {}, title),
-            ),
-            h('span', { class: 'chip' }, 'Phase highlight'),
-          ),
-          h('p', { class: 'sm muted' }, body),
+          ['Y0', 'Design + prototype', 'This mockup: full purchase, verification and royalty flows simulated against SenChain Testnet contracts.'],
+          ['Y1', 'Testnet pilot', 'Real testnet deployment, onboarding creators, first cultural review board convened.'],
+          ['Y2', 'Mainnet + fiat rails', 'Mainnet launch with MoMo/ZaloPay/Napas settlement and an asset passport standard.'],
+          ['Y3', 'Cross-platform passport', 'License passports consumed by Unity, Unreal and Godot plugins — the engine enforces rights.'],
+          ['Yx', 'Governance DAO', 'Protocol fees, review policy and registry upgrades move to a creator/reviewer DAO.'],
+        ] as Array<[string, string, string]>
+      ).map(([phase, title, body]) =>
+        h('div', { class: 'row' },
+          h('span', { class: 'chip' }, phase),
+          h('b', {}, title),
+          h('span', { class: 'sm muted grow' }, body),
         ),
-      ),
     ),
 
     // 6 — Footer note

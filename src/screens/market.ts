@@ -37,13 +37,16 @@ function assetCard(a: Asset): HTMLElement {
     },
     h('div', { class: 'preview' }, glyphFor(a.kind, 56)),
     h('h3', {}, a.name),
-    h('div', { class: 'row sm muted' }, creator?.name ?? a.creatorId),
-    h('div', { class: 'row', style: 'margin-top:8px' },
+    // dec: price+creator lead the card. Meta chips sit below as secondary info.
+    h('div', { class: 'row spread', style: 'margin-top: var(--space-2)' },
+      a.tiers.length
+        ? h('strong', { class: 'mono', style: 'color: var(--accent)' }, fmt(cheapestTier(a)))
+        : h('span', { class: 'faint mono' }, 'no tiers'),
+      h('span', { class: 'sm muted' }, creator?.name ?? a.creatorId),
+    ),
+    h('div', { class: 'row sm', style: 'margin-top: var(--space-2)' },
       h('span', { class: 'chip' }, a.kind),
       verifChip(a.verification.status),
-    ),
-    h('div', { class: 'row spread', style: 'margin-top:8px' },
-      h('span', { class: 'sm' }, a.tiers.length ? fmt(cheapestTier(a)) : h('span', { class: 'faint' }, 'no tiers')),
       a.passport.platforms.length
         ? h('span', { class: 'chip' }, `${a.passport.platforms.length} platforms`)
         : h('span', { class: 'chip chip-off' }, 'no passport'),
@@ -61,8 +64,7 @@ function renderGrid(): HTMLElement {
       (!q || a.name.toLowerCase().includes(q) || a.blurb.toLowerCase().includes(q)),
   );
   if (!listed.length) {
-    return h('div', { class: 'banner' },
-      h('p', { class: 'muted' }, 'No listed assets match this filter. Try clearing the search or picking another kind.'));
+    return h('div', { class: 'banner warn' }, 'No assets match this filter.');
   }
   return h('div', { class: 'grid assets' }, listed.map(assetCard));
 }
@@ -91,18 +93,19 @@ export function renderMarket(): HTMLElement {
       gridHost.replaceChildren(renderGrid());
     },
   });
-
   return h('section', { class: 'wrap' },
-    h('h1', {}, 'AI Game Asset Market'),
+    // dec: two-row head — h1 + one-line sub, then chip row. No hero plate.
+    h('h1', {}, 'AI game asset market'),
     h('p', { class: 'muted' }, 'Licensed AI-generated game assets with on-chain provenance and VND fiat checkout.'),
-    h('div', { class: 'row', style: 'margin-bottom:16px' },
-      h('span', { class: 'chip chip-chain' }, '⛓ SenChain Testnet'),
-      h('span', { class: 'chip' }, 'VND fiat checkout'),
+    h('div', { class: 'row', style: 'margin-bottom: var(--space-4)' },
+      h('span', { class: 'chip chip-chain' }, '⛓ SenChain testnet'),
+      h('span', { class: 'chip' }, 'VND fiat'),
       h('span', { class: 'chip chip-ok' }, 'AI provenance'),
     ),
-    h('div', { class: 'row', style: 'margin-bottom:14px' },
-      h('div', { class: 'field grow' }, h('label', {}, 'Kind'), kindSel),
-      h('div', { class: 'field grow' }, h('label', {}, 'Search'), search),
+    // dec: kind left, search right. Search gets a floor width so the row never collapses.
+    h('div', { class: 'row spread', style: 'margin-bottom: var(--space-4)' },
+      h('div', { class: 'field' }, h('label', {}, 'Kind'), kindSel),
+      h('div', { class: 'field', style: 'min-width: 260px; flex: 0 1 340px' }, h('label', {}, 'Search'), search),
     ),
     gridHost,
   );

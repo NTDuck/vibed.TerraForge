@@ -1,7 +1,7 @@
 import { commit, getState } from '../app';
 import { setReview, toggleWallet } from '../store';
 import { glyphFor } from '../lib/glyph';
-import { h, fmt, fmtDate, verifChip, notify } from '../ui';
+import { h, fmtDate, verifChip, notify } from '../ui';
 import { REVIEWER } from '../seed';
 import type { Asset } from '../types';
 
@@ -19,16 +19,16 @@ function personaBanner(): HTMLElement {
   );
 }
 
-/** dec: one reviewable asset — stats + AI reasons on the left, verdict form on the right.
- * The textarea lives outside state. The click handler reads it. */
+/** dec: one reviewable asset — glyph + provenance on top, AI reasons, then the
+ * verdict form. The textarea lives outside state. The click handler reads it. */
 function reviewCard(asset: Asset, reviewerName: string): HTMLElement {
   const v = asset.verification;
   const creator = getState().users[asset.creatorId]?.name ?? asset.creatorId;
 
   const note = h('textarea', {
-    class: 'field',
     rows: 3,
     placeholder: `Reviewer note (optional — default: "${reviewerName} cleared this for cultural sensitivity.")`,
+    'aria-label': 'Review note',
   }) as HTMLTextAreaElement;
 
   const decide = (approved: boolean): void => {
@@ -44,15 +44,16 @@ function reviewCard(asset: Asset, reviewerName: string): HTMLElement {
         h('div', { class: 'sm muted' }, `by ${creator} · model: ${asset.model}`)),
       verifChip(v.status),
     ),
-    h('div', { class: 'row sm mono', style: 'margin-top:8px' },
-      h('span', {}, `similarity ${v.similarity.toFixed(1)}%`),
-      h('span', { class: 'faint' }, '·'),
-      h('span', {}, `traceability ${v.traceability.toFixed(0)}%`),
+    h('dl', { class: 'kv', style: 'margin-top: var(--space-3)' },
+      h('dt', null, 'Similarity'),
+      h('dd', null, `${v.similarity.toFixed(1)}%`),
+      h('dt', null, 'Traceability'),
+      h('dd', null, `${v.traceability.toFixed(0)}%`),
     ),
     h('ul', { class: 'sm muted' },
-      ...(v.reasons ?? ['No AI reasons recorded.']).map((r) => h('li', {}, r))),
+      ...(v.reasons ?? ['No AI reasons recorded.']).map((r) => h('li', null, r))),
     h('div', { class: 'field' },
-      h('label', {}, 'Reviewer note'),
+      h('label', null, 'Reviewer note'),
       note,
     ),
     h('div', { class: 'row' },
@@ -70,32 +71,39 @@ export function renderReview(): HTMLElement {
   const decided = s.assets.filter((a) => a.review != null);
 
   return h('section', { class: 'wrap' },
-    h('h1', {}, 'Cultural review'),
+    h('div', { class: 'row spread' },
+      h('h1', { style: 'margin:0' }, 'Cultural review'),
+      h('span', { class: 'chip' }, `${queue.length} in queue`),
+    ),
     h('p', { class: 'muted' },
       'Whiteboard step between the AI verdict and mint: a human reviewer weighs provenance ' +
       'stats and cultural context before an asset can go on-chain.'),
     !isReviewer && personaBanner(),
     isReviewer
       ? (queue.length === 0
-        ? h('div', { class: 'banner' }, 'Queue clear — no assets awaiting cultural review')
-        : h('div', { class: 'grid', style: 'gap:16px' },
-          ...queue.map((a) => reviewCard(a, s.users[REVIEWER].name))))
+        ? h('div', { class: 'banner' }, 'Queue clear. No assets await cultural review.')
+        : h('div', { class: 'grid' }, ...queue.map((a) => reviewCard(a, s.users[REVIEWER].name))))
       : null,
-    h('h2', {}, 'Review verdict history'),
+    h('h2', null, 'Review verdict history'),
     decided.length === 0
       ? h('p', { class: 'muted' }, 'No verdicts yet — approved and rejected reviews will appear here.')
-      : h('div', { class: 'grid' },
-        ...decided.map((a) => {
-          const r = a.review as NonNullable<Asset['review']>;
-          return h('div', { class: 'card row spread' },
-            h('div', { class: 'grow' },
-              h('b', {}, a.name),
-              h('div', { class: 'sm muted' }, `Reviewer: ${s.users[r.reviewerId]?.name ?? r.reviewerId}`),
-              r.note ? h('div', { class: 'sm' }, r.note) : null),
-            h('div', { class: 'row' },
-              h('span', { class: `chip ${r.approved ? 'chip-ok' : 'chip-err'}` }, r.approved ? 'Approved' : 'Rejected'),
-              h('span', { class: 'sm faint mono' }, fmtDate(r.at))),
-          );
-        })),
+      : h('table', { class: 'ledger' },
+        h('thead', null,
+          h('tr', null,
+            h('th', null, 'Time'),
+            h('th', null, 'Asset'),
+            h('th', null, 'Verdict'),
+            h('th', null, 'Note'))),
+        h('tbody', null,
+          ...decided.map((a) => {
+            const r = a.review as NonNullable<Asset['review']>;
+            return h('tr', null,
+              h('td', { class: 'mono' }, fmtDate(r.at)),
+              h('td', null, a.name),
+              h('td', null, h('span', { class: `chip ${r.approved ? 'chip-ok' : 'chip-err'}` }, r.approved ? 'Approved' : 'Rejected')),
+              h('td', { class: r.note ? 'sm' : 'sm faint' }, r.note || 'No note'),
+            );
+          })),
+      ),
   );
 }
