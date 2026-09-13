@@ -1,4 +1,5 @@
 import { commit, getState } from '../app';
+import { glyphFor } from '../lib/glyph';
 import { startPurchase, setPurchaseStep } from '../store';
 import { runPurchase } from '../flow';
 import { CONFIG } from '../config';
@@ -151,7 +152,7 @@ export function renderAsset(id: string): HTMLElement {
   const activeTier = purchaseActive ? asset.tiers.find((t) => t.id === s.purchase!.tierId) : undefined;
 
   const left = h('div', { class: 'card' },
-    h('div', { class: 'preview', style: 'font-size:4rem' }, asset.preview),
+    h('div', { class: 'preview' }, glyphFor(asset.kind, 96)),
     h('h1', {}, asset.name),
     h('p', { class: 'muted' }, asset.blurb),
     h('p', { class: 'sm' }, 'Creator: ', h('strong', {}, creator?.name ?? asset.creatorId)),

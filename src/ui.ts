@@ -66,7 +66,7 @@ export const verifChip = (status: VerificationStatus): HTMLElement => {
 };
 
 export const onchainChip = (on: boolean): HTMLElement =>
-  h('span', { class: `chip ${on ? 'chip-chain' : 'chip-off'}` }, on ? '⛓ on-chain' : 'kast off-chain');
+  h('span', { class: `chip ${on ? 'chip-chain' : 'chip-off'}` }, on ? '⛓ on-chain' : 'off-chain');
 
 /** dec: role picker shared by wallet overlay + empty-state prompts. */
 export const ROLES = [

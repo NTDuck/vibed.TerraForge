@@ -87,7 +87,6 @@ export function submitAsset(
     blurb: input.blurb,
     creatorId: s.session ?? CREATOR,
     model: input.model,
-    preview: '✨',
     verification: scan,
     passport: { platforms: [], formats: [] },
     tiers: [],

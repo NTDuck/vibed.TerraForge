@@ -1,4 +1,5 @@
 import { getState } from '../app';
+import { glyphFor } from '../lib/glyph';
 import { h, fmt, verifChip, navTo } from '../ui';
 import type { Asset } from '../types';
 
@@ -34,7 +35,7 @@ function assetCard(a: Asset): HTMLElement {
         }
       },
     },
-    h('div', { class: 'preview' }, a.preview),
+    h('div', { class: 'preview' }, glyphFor(a.kind, 56)),
     h('h3', {}, a.name),
     h('div', { class: 'row sm muted' }, creator?.name ?? a.creatorId),
     h('div', { class: 'row', style: 'margin-top:8px' },

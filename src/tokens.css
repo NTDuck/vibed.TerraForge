@@ -1,0 +1,52 @@
+/* Sen Lotus design tokens — locked system for all screens (see style.css header stamp).
+ * Import order matters: tokens first, then style.css (or let style.css inline-include them). */
+
+:root {
+  /* paper + ink */
+  --paper: oklch(0.155 0.015 285);
+  --paper-2: oklch(0.195 0.02 285);
+  --paper-3: oklch(0.25 0.025 285);
+  --ink: oklch(0.94 0.008 285);
+  --ink-dim: oklch(0.75 0.015 285);
+  --ink-faint: oklch(0.56 0.02 285);
+
+  /* accent — lotus magenta */
+  --accent: oklch(0.74 0.17 350);
+  --accent-strong: oklch(0.64 0.19 350);
+  --accent-ink: oklch(0.16 0.07 350);
+  --accent-soft: color-mix(in oklch, var(--accent) 13%, var(--paper-2));
+
+  /* status */
+  --ok: oklch(0.8 0.15 160);
+  --warn: oklch(0.82 0.15 80);
+  --err: oklch(0.72 0.18 25);
+
+  --line: oklch(0.31 0.02 285);
+  --line-strong: oklch(0.4 0.025 285);
+
+  /* type */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.1875rem;
+  --text-xl: 1.5rem;
+  --text-2xl: clamp(1.9rem, 3.6vw, 2.6rem);
+
+  /* space (4pt) */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+
+  /* shape + motion */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --dur-slow: 280ms;
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 0.55, 0.2);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}

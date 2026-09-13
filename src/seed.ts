@@ -47,7 +47,6 @@ export const ASSETS: Asset[] = [
       'Battle-ready hero mesh + PBR textures inspired by the 1789 Đống Đa campaign. Rigged, 4 LODs, game-ready.',
     creatorId: CREATOR,
     model: 'SenDiffusion XL',
-    preview: '⚔️',
     verification: {
       similarity: 12.4,
       traceability: 96,
@@ -96,7 +95,6 @@ export const ASSETS: Asset[] = [
       '360° HDRI environment — dusk over the Mekong Delta, generated and manually graded. 8K equirectangular.',
     creatorId: CREATOR,
     model: 'SenDiffusion Sky',
-    preview: '🌇',
     verification: {
       similarity: 8.1,
       traceability: 98,
@@ -133,7 +131,6 @@ export const ASSETS: Asset[] = [
       'Traditional-dress skin set for humanoid avatars, 3 colourways. AI-drafted, hand-finished lineart overlay.',
     creatorId: CREATOR,
     model: 'SenDiffusion XL',
-    preview: '👘',
     verification: {
       similarity: 27.5,
       traceability: 92,
@@ -182,7 +179,6 @@ export const ASSETS: Asset[] = [
       'Combat-meditation sound loop, 45s. Generated stems + recorded đàn bầu samples with registered provenance.',
     creatorId: CREATOR,
     model: 'SonicBloom v2',
-    preview: '🎧',
     verification: {
       similarity: 15.2,
       traceability: 88,
@@ -219,7 +215,6 @@ export const ASSETS: Asset[] = [
       'Vector emblem for guild branding. AI-drafted geometry, artist-corrected strokes; source sketch included.',
     creatorId: CREATOR,
     model: 'VectorMuse 3',
-    preview: '🐉',
     verification: {
       similarity: 34.0,
       traceability: 84,

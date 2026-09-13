@@ -57,7 +57,8 @@ export interface Asset {
   blurb: string;
   creatorId: string;
   model: string;
-  preview: string;
+  /** dec: legacy emoji field, superseded by lib/glyph glyphFor(kind). Optional for stored-state compat. */
+  preview?: string;
   verification: Verification;
   review?: Review;
   passport: Passport;

@@ -4,6 +4,11 @@
   "workspaces": {
     "": {
       "name": "senchain-mockup",
+      "dependencies": {
+        "@fontsource/ibm-plex-sans": "^5.3.0",
+        "@fontsource/jetbrains-mono": "^5.3.0",
+        "@fontsource/space-grotesk": "^5.3.0",
+      },
       "devDependencies": {
         "@types/bun": "^1.4.2",
         "bun-types": "^1.4.2",
@@ -11,6 +16,12 @@
     },
   },
   "packages": {
+    "@fontsource/ibm-plex-sans": ["@fontsource/ibm-plex-sans@5.3.0", "", {}, "sha512-CbE4CbbEEZJX860XyUiRpsksXIQR8Rp2XDva2VO53NJox9tVNtusrysd2x5YkUEY3ErQ66W1IiiQL8/wihhw5w=="],
+
+    "@fontsource/jetbrains-mono": ["@fontsource/jetbrains-mono@5.3.0", "", {}, "sha512-fqDfB5I9f1p1TV486aUgB9t8zP84P0O1FtQR5Ol9vjwPy+S+EIGlVYm1cvj2W5shcZMTg2nZFdVMoH5wFu8a1A=="],
+
+    "@fontsource/space-grotesk": ["@fontsource/space-grotesk@5.3.0", "", {}, "sha512-ksnGizDPXIDuvqcTYTSrmZ+evx9sDlS8rp7+42BQ7wU+spt3twEoXfbJz672C+5CLg6VeUQwRy5RXshWb67LcQ=="],
+
     "@types/bun": ["@types/bun@1.4.2", "", { "dependencies": { "bun-types": "1.4.2" } }, "sha512-GimotNn7+ZV0uVArItBbriZsR1oNf0+WTzPkdcFrzShI7k2norL0uzEaJT8T33dWr7O/c9ZDuAFQrctKCi72oQ=="],
 
     "@types/node": ["@types/node@22.20.2", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-xlvWf4Vs9n1PEVYwP1n4vvG07M6y8WgvJ2t0vbrWTmijsIHp1cS+uJ2kMIRdY3nHZK0nCYKrPeD171+SzF4/zw=="],

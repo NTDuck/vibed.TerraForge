@@ -5,12 +5,17 @@
   "scripts": {
     "check": "bunx tsc --noEmit",
     "test": "bun test",
-    "build": "bun build src/main.ts --outdir dist --minify",
+    "build": "bun build src/main.ts --outdir dist --minify && bash tools/build-fonts.sh",
     "serve": "bun serve.ts",
     "dev": "bun run build && bun run serve"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",
     "bun-types": "^1.4.2"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0"
   }
 }

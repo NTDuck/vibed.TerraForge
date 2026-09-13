@@ -6,6 +6,7 @@ COPY package.json bun.lock* ./
 RUN npm install --save-dev bun && npx bun install
 COPY . .
 RUN ./node_modules/.bin/bun run build
+RUN bash tools/build-fonts.sh
 # bun build emits only JS+CSS assets; the shell page must ship too (paths rewritten /dist/* -> /*)
 COPY index.html dist/index.html
 RUN sed -i 's|\./dist/|/|g' dist/index.html

@@ -1,5 +1,6 @@
 import { commit, getState } from '../app';
 import { setReview, toggleWallet } from '../store';
+import { glyphFor } from '../lib/glyph';
 import { h, fmt, fmtDate, verifChip, notify } from '../ui';
 import { REVIEWER } from '../seed';
 import type { Asset } from '../types';
@@ -37,7 +38,7 @@ function reviewCard(asset: Asset, reviewerName: string): HTMLElement {
 
   return h('div', { class: 'card' },
     h('div', { class: 'row' },
-      h('div', { class: 'preview', style: 'width:56px' }, asset.preview),
+      h('div', { class: 'glyph' }, glyphFor(asset.kind, 40)),
       h('div', { class: 'grow' },
         h('h3', { style: 'margin:0' }, asset.name),
         h('div', { class: 'sm muted' }, `by ${creator} · model: ${asset.model}`)),
