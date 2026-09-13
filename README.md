@@ -2,7 +2,7 @@
 
 INTE2581 S2 2026 · Assessment Task 3. This web mockup shows how a Vietnamese marketplace for AI-generated game assets can use blockchain, smart contracts, NFTs and AI provenance. It demonstrates a solution for the five assignment issues.
 
-> **The app simulates all data.** The app uses no real chain, wallet, payment, or AI. The app stores state in `localStorage`.
+> **The mockup simulates everything.** No real chain, wallet, payment, or AI exists. State lives in `localStorage`.
 
 ## Run with Docker (recommended)
 
