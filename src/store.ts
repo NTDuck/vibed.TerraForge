@@ -219,7 +219,7 @@ export function issueLicense(
     s,
     'verify-payment',
     `Payment verified — ${price.toLocaleString('vi-VN')}₫`,
-    'Off-chain gateway → oracle callback confirms receipt to LicenseIssuer',
+    'Off-chain gateway → oracle reports the payment to LicenseIssuer',
   );
   const tx = emit(
     s,

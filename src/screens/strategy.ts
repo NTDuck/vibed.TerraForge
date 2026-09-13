@@ -82,7 +82,7 @@ export function renderStrategy(): HTMLElement {
         h('div', { class: 'row' }, h('h3', { class: 'grow' }, 'On-chain'), h('span', { class: 'chip chip-chain' }, '⛓ trust layer')),
         sig(`${CONFIG.chain.asset}.register(metadataHash, provenance)`, 'D-2: ownership & provenance hash must be tamper-proof and publicly auditable.'),
         sig(`${CONFIG.chain.license}.issue(assetId, tier, price)`, 'D-3: require !alreadyLicensed && price match — money in, license out, no trusted middleman.'),
-        sig(`${CONFIG.chain.enforcer}.permit(licenseId, right)`, 'D-3: rights checks (use/resell/modify) enforced by the token itself, not platform goodwill.'),
+        sig(`${CONFIG.chain.enforcer}.permit(licenseId, right)`, 'D-3: the token enforces rights (use/resell/modify) itself, not platform goodwill.'),
         sig(`${CONFIG.chain.enforcer}.resale(licenseId, to, price)`, 'Resale routes the creator royalty automatically inside the transfer.'),
         sig('royaltySplit → creator / platform', 'Deterministic split at transfer time; nothing to renegotiate.'),
       ),
@@ -90,14 +90,14 @@ export function renderStrategy(): HTMLElement {
         h('div', { class: 'row' }, h('h3', { class: 'grow' }, 'Off-chain'), h('span', { class: 'chip chip-off' }, 'kast judgement layer')),
         h('p', { class: 'sm' }, h('b', {}, 'AI provenance scan'), ' — ', h('span', { class: 'muted' }, 'similarity + traceability scoring against registered works; heavy models, private embeddings.')),
         h('p', { class: 'sm' }, h('b', {}, 'Human cultural review'), ' — ', h('span', { class: 'muted' }, 'reviewers judge cultural sensitivity a model cannot sign off on.')),
-        h('p', { class: 'sm' }, h('b', {}, 'Fiat gateway'), ' — ', h('span', { class: 'muted' }, `${CONFIG.fiatMethods.join(' / ')} → backend verifies payment → signed oracle relays result to the chain.`)),
+        h('p', { class: 'sm' }, h('b', {}, 'Fiat gateway'), ' — ', h('span', { class: 'muted' }, `${CONFIG.fiatMethods.join(' / ')} → the backend verifies the payment → a signed oracle reports the result to the chain.`)),
         h('p', { class: 'sm' }, h('b', {}, 'File storage'), ' — ', h('span', { class: 'muted' }, 'asset binaries off-chain, only the content hash anchors them (D-2: cost & privacy).')),
         h('p', { class: 'sm muted' }, 'Why off-chain: model inference and user data are too costly and privacy-sensitive to put on-chain — only the verdict hash lands on-chain.'),
       ),
     ),
     h('h3', {}, 'Buyer flow'),
     h('div', { class: 'steps' },
-      ['Buyer', 'Fiat payment', 'Oracle verify', 'LicenseIssuer.issue', 'LicenseNFT'].map((label, i) =>
+      ['Buyer', 'Fiat payment', 'Payment verify', 'LicenseIssuer.issue', 'LicenseNFT'].map((label, i) =>
         h('span', { class: `step${i === 0 ? ' now' : ''}` }, label),
       ),
     ),
@@ -147,7 +147,7 @@ export function renderStrategy(): HTMLElement {
           ['Y0', 'chip', 'Design + prototype', 'This mockup: full purchase, verification and royalty flows simulated against SenChain Testnet contracts.'],
           ['Y1', 'chip-ok', 'Testnet pilot', 'Real testnet deployment, onboarding creators, first cultural review board convened.'],
           ['Y2', 'chip-chain', 'Mainnet + fiat rails', 'Mainnet launch with MoMo/ZaloPay/Napas settlement and an asset passport standard.'],
-          ['Y3', 'chip-warn', 'Cross-platform passport', 'License passports consumed by Unity, Unreal and Godot plugins — rights checked in-engine.'],
+          ['Y3', 'chip-warn', 'Cross-platform passport', 'License passports consumed by Unity, Unreal and Godot plugins — the engine enforces rights.'],
           ['Yx', 'chip-err', 'Governance DAO', 'Protocol fees, review policy and registry upgrades move to a creator/reviewer DAO.'],
         ] as Array<[string, string, string, string]>
       ).map(([phase, chip, title, body]) =>

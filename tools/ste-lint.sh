@@ -9,8 +9,18 @@ fail=0
 echo "── docs ──"
 python3 "$LINT" README.md docs/*.md .decisions/*.md "$@" || fail=1
 
-echo "── UI strings ──"
+echo "── UI strings (per source file; synonym scope = file) ──"
 python3 tools/extract_ui_strings.py >/dev/null
-python3 "$LINT" /tmp/ui_strings.txt || fail=1
+for f in /tmp/ui_strings/*.txt; do
+  out=$(python3 "$LINT" "$f" 2>&1) || fail=1
+  if echo "$out" | grep -qE "violation"; then
+    echo "$out" | grep -E "violation" | sed "s|/tmp/ui_strings/||; s|^[a-z_]*\.txt:|$(basename "$f" .txt):|"
+  fi
+done
 
+if [ "$fail" -eq 0 ]; then
+  echo "STE: PASS"
+else
+  echo "STE: FAIL"
+fi
 exit $fail

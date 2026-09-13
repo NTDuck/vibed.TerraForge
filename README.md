@@ -1,10 +1,19 @@
 # 🪷 SenChain — Blockchain Marketplace for AI-Generated Game Assets (Mockup)
 
-INTE2581 S2 2026 · Assessment Task 3 — clickable **web mockup** demonstrating how a Vietnamese marketplace for AI-generated game/virtual assets would use blockchain, smart contracts, NFTs and AI provenance to solve the five assignment issues.
+INTE2581 S2 2026 · Assessment Task 3. This web mockup shows how a Vietnamese marketplace for AI-generated game assets can use blockchain, smart contracts, NFTs and AI provenance. It demonstrates a solution for the five assignment issues.
 
-> **Everything is simulated** — no real chain, wallet, payment, or AI. State lives in `localStorage`.
+> **The app simulates all data.** The app uses no real chain, wallet, payment, or AI. The app stores state in `localStorage`.
 
-## Run
+## Run with Docker (recommended)
+
+```bash
+docker build -t senchain .
+docker run -p 8080:80 senchain
+```
+
+Open http://localhost:8080. Sign in with the top-right button. No other step is necessary.
+
+## Run without Docker (development)
 
 ```bash
 bun install
@@ -16,25 +25,25 @@ bun run dev      # build + serve → http://localhost:5173
 | Assignment requirement | Where |
 |---|---|
 | B2 user roles | Sign in (top-right): An Trần (creator) · Bình Lê (buyer) · Chị Phạm (reviewer) |
-| B2 deployed smart contracts | `GameAssetRegistry` · `LicenseIssuer` · `LicenseEnforcer` (simulated, visible in ledger) |
-| B2 one meaningful transaction | Buy license: fiat → backend verify → SC issue → 90/10 split |
+| B2 deployed smart contracts | `GameAssetRegistry` · `LicenseIssuer` · `LicenseEnforcer` (simulated, visible in the ledger) |
+| B2 one meaningful transaction | Buy a license: fiat payment → backend check → contract issue → 90/10 split |
 | B2 contract condition enforcement | Double-license revert · resale-right revert · usage permits |
-| B2 on-chain vs off-chain | ⛓ chips on every ledger row; architecture screen |
+| B2 on-chain vs off-chain | ⛓ chips on every ledger row · architecture screen |
 | Issue 1 ownership/licensing | Rights matrix per tier (Standard/Studio/Remix) + usage checker |
 | Issue 2 AI provenance | Upload → scan → verdict bands (<30 pass · 30–50 human review · ≥50 reject · <80 trace audit) → cultural review → mint |
-| Issue 3 transparent payments | Purchase steps + splits tables + full ledger overlay |
+| Issue 3 transparent payments | Purchase steps + split tables + full ledger overlay |
 | Issue 4 interoperability | Compatibility passport per asset (platforms × formats) |
 | Issue 5 security/governance | Strategy screen limitations + upgrade/governance notes |
 
 ## Demo script (5 min)
 
-1. **Sign in as An Trần** → Upload tab → sliders: 22%/92% → submit → machine-verified → Mint.
-2. Upload again at 62% → auto-**rejected** (fraud gate). At 35% → human review queue.
-3. **Sign in as Chị Phạm** → Review tab → approve borderline asset → An mints it.
-4. **Sign in as Bình Lê** → Market → Ronin → Buy license → watch pay→verify→issue steps, serial `#1`, split 1.710.000₫/190.000₫.
-5. Buy same tier again → **smart-contract revert**. Check the ⛓ Ledger for the revert row.
-6. Dashboard → usage checker: Commercial ✓, Resale ✗ (Standard tier). Studio tier resells with 10% creator royalty.
-7. Footer **Reset demo data** restores seed.
+1. Sign in as An Trần. Open the Upload tab. Keep the sliders at 22%/92%. Submit. The verdict is machine-verified. Mint it.
+2. Upload again with similarity 62%. The system rejects it. At 35% the asset needs human review.
+3. Sign in as Chị Phạm. Open the Review tab. Approve the borderline asset. Sign back as An Trần and mint it.
+4. Sign in as Bình Lê. Open Market → Ronin → Buy license. Watch the pay → check → issue steps. The license shows serial `#1` and the split 1.710.000₫/190.000₫.
+5. Buy the same tier again. The smart contract reverts the request. The ⛓ Ledger shows the revert row.
+6. Open Dashboard → usage checker. Commercial use passes. Resale fails on a Standard tier. A Studio tier permits resale and pays a 10% creator royalty.
+7. The footer button **Reset demo data** restores the seed state.
 
 ## Repo map
 
@@ -55,4 +64,4 @@ docs/SRS.md USER_GUIDE.md   # requirements spec · walkthrough
 
 ## Gates
 
-`bun run check` · `bun test` (12) · `bun run build` · `python tests/e2e_smoke.py` (35, needs a running server + playwright chromium).
+`bun run check` · `bun test` (12) · `bun run build` · `bash tools/ste-lint.sh` (ASD-STE100) · e2e: start the dev server or the Docker container, then run `python tests/e2e_smoke.py` (35 checks, needs Playwright Chromium).
