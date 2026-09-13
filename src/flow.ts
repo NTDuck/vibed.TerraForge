@@ -7,8 +7,8 @@ import { notify } from './ui';
 /**
  * dec: purchase orchestration mirrors the whiteboard buyer flow:
  * fiat payment → backend verification → smart contract issues license (+ royalty split).
- * Steps are distinct UI states so the mockup can show on-chain vs off-chain boundaries;
- * the ledger mutation itself is atomic in issueLicense.
+ * Steps are distinct UI states so the mockup can show on-chain vs off-chain boundaries.
+ * The ledger mutation itself is atomic in issueLicense.
  */
 export async function runPurchase(assetId: string, tierId: string, method: string, failPayment: boolean): Promise<void> {
   const wait = (ms: number) => delay(ms * CONFIG.demoSpeed);

@@ -2,7 +2,7 @@ export const REV = 1;
 
 export const CONFIG = {
   storeKey: 'senchain-mock-v1',
-  /** multiplier applied to simulated delays; tests set 0 */
+  /** multiplier applied to simulated delays. Tests set 0 */
   demoSpeed: 1,
   aiSimilarity: { passBelow: 30, rejectAt: 50 },
   sourceTraceabilityMin: 80,

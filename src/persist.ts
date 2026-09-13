@@ -2,7 +2,7 @@ import { CONFIG } from './config';
 import { emptyState } from './seed';
 import type { State } from './types';
 
-/** Trust boundary: anything from localStorage is unvalidated — fail closed to fresh state. */
+/** Trust boundary: treat localStorage data as unvalidated input. Fail closed to fresh state. */
 export function loadState(): State {
   try {
     const raw = localStorage.getItem(CONFIG.storeKey);

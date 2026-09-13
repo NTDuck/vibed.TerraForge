@@ -1,7 +1,7 @@
 import { commit } from './app';
 import { toast } from './store';
 
-/** dec: app-level toast from async flows (commit-driven, so it re-renders). */
+/** dec: app-level toast from async flows. Commit-driven, so it re-renders. */
 export function notify(kind: 'ok' | 'warn' | 'err', msg: string): void {
   commit((s) => toast(s, kind, msg));
   setTimeout(() => commit((s) => ({ ...s, toasts: s.toasts.filter((t) => t.msg !== msg || t.kind !== kind) })), 4200);
@@ -42,7 +42,7 @@ export const fmtDate = (iso: string): string =>
 export const qs = (sel: string, root: ParentNode = document): HTMLElement =>
   root.querySelector(sel) as HTMLElement;
 
-/** dec: hash router — `#/screen/id`; deep-linkable without a router lib. */
+/** dec: hash router — `#/screen/id`. Deep-linkable without a router lib. */
 export function route(): { screen: string; id?: string } {
   const [, screen, id] = location.hash.split('/');
   return { screen: screen || 'market', id };

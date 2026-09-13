@@ -20,7 +20,7 @@ Every architectural decision, its source (assignment / whiteboard / user rule), 
 | D-15 | Compatibility passport per asset (platforms × formats) | Whiteboard §compatibility passport. Issue 4 | Skip (interop covered in strategy only) | Asset detail shows the passport. Upload form edits it |
 | D-16 | `// dec:` inline comments + this log | User rule: traceable decisions | None | Every module header links decisions to code |
 | D-17 | Docker two-stage build: Bun compiles the bundle, nginx serves static files | User rule: "users just need to run docker and open website" | `bun run serve` in the container (heavier runtime image) | `Dockerfile` + `nginx.conf`. Users run `docker run -p 8080:80` and open the site |
-| D-18 | All English docs and UI strings follow ASD-STE100 (structural rules, strict mode) | User rule: "ensure every message in code & every docs adhere to it" | No controlled language | `tools/ste-lint.sh` checks docs + extracted UI strings. `// dec:` comments are internal and stay free-form |
+| D-18 | All English docs, UI strings and code comments follow ASD-STE100 (structural rules, strict mode) | User rule: "ensure every message in code & every docs adhere to it" | No controlled language. Free-form `dec:` comments (rejected — comments are messages in code) | `tools/ste-lint.sh` checks docs + extracted UI strings + extracted comments. The `dec:` prefix and D-id links stay. Wording follows STE |
 
 ## Requirement → implementation trace
 

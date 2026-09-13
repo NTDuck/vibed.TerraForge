@@ -17,7 +17,7 @@ const rightsMatrix = (rights: LicenseRights): HTMLElement =>
     ...RIGHTS_LABEL.map(([key, label]) =>
       h('span', { class: `right ${rights[key] ? 'yes' : 'no'}` }, label)));
 
-/** dec: verdict of the last on-chain permit() call for this license — derived
+/** dec: verdict of the last on-chain permit() call for this license. Derived
  * from ledger txs so the chip survives re-render without extra ui state. */
 const usageVerdict = (txs: Tx[], licenseId: string): HTMLElement | null => {
   const last = txs.find((t) => t.kind === 'usage' && t.call?.args[0] === licenseId);
@@ -28,7 +28,7 @@ const usageVerdict = (txs: Tx[], licenseId: string): HTMLElement | null => {
 
 const empty = (msg: string): HTMLElement => h('p', { class: 'muted sm' }, msg);
 
-/** dec: my cut of a sale — primary sales pay the creator split; resales pay
+/** dec: my cut of a sale. Primary sales pay the creator split. Resales pay
  * the original creator a royalty split (kind creator/royalty per spec). */
 const creatorCutOf = (s: State, sale: Sale): number | null => {
   const asset = s.assets.find((a) => a.id === sale.assetId);
@@ -45,7 +45,7 @@ const licenseCard = (s: State, lic: LicenseNft): HTMLElement => {
   const asset = s.assets.find((a) => a.id === lic.assetId);
   const tier = asset?.tiers.find((t) => t.id === lic.tierId);
   if (!asset || !tier) return empty(`License ${lic.id} references a missing asset/tier.`);
-  // dec: resale price input kept per-card via closure — default is tier list price.
+  // dec: resale price input kept per-card via closure. Default is the tier list price.
   const priceInput = h('input', {
     class: 'field', type: 'number', min: 0, step: 1000, value: String(tier.priceVnd),
     'aria-label': 'Resale price (VND)',

@@ -4,8 +4,8 @@ import { h, fmt, fmtDate, verifChip, notify } from '../ui';
 import { REVIEWER } from '../seed';
 import type { Asset } from '../types';
 
-/** dec: reviewer persona guard — review actions mutate cultural verdicts, so only
- * the seeded reviewer account may act; everyone else gets an explanatory banner. */
+/** dec: reviewer persona guard — review actions mutate cultural verdicts. Only
+ * the seeded reviewer account may act. Everyone else gets an explanatory banner. */
 function personaBanner(): HTMLElement {
   const who = getState().session ? getState().users[getState().session as string].name : 'you';
   return h('div', { class: 'banner warn' },
@@ -19,7 +19,7 @@ function personaBanner(): HTMLElement {
 }
 
 /** dec: one reviewable asset — stats + AI reasons on the left, verdict form on the right.
- * The textarea element is held locally (not state) and read at click time. */
+ * The textarea lives outside state. The click handler reads it. */
 function reviewCard(asset: Asset, reviewerName: string): HTMLElement {
   const v = asset.verification;
   const creator = getState().users[asset.creatorId]?.name ?? asset.creatorId;

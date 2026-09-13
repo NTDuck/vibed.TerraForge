@@ -2,8 +2,8 @@ import { emptyState } from './seed';
 import { saveState } from './persist';
 import type { State } from './types';
 
-/** dec: single mutable container; React-free — commit() applies a pure transition,
- * persists, and notifies subscribers (main.ts re-renders). No framework. */
+/** dec: single mutable container. No framework: commit() applies a pure transition,
+ * persists, and notifies subscribers. main.ts re-renders. */
 let current: State = emptyState();
 const listeners = new Set<() => void>();
 

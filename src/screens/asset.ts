@@ -71,7 +71,7 @@ function purchasePanel(asset: Asset, tier: LicenseTier): HTMLElement {
       ));
   }
 
-  // summary / paying / verifying / issuing: confirm form + live step indicator
+  // summary / paying / verifying / issuing: payment form + live step indicator
   let method = p.method ?? CONFIG.fiatMethods[0];
   let fail = p.failPayment;
   const methodSel = h('select', { disabled: p.step !== 'summary' },

@@ -1,7 +1,7 @@
 import { h } from '../ui';
 import { CONFIG } from '../config';
 
-/** dec: percentages are derived from CONFIG splits — never duplicated as literals. */
+/** dec: the code derives percentages from CONFIG splits — never duplicated as literals. */
 const pct = (frac: number): string => `${(frac * 100).toFixed(0)}%`;
 
 /** dec: mono contract-signature line for the on-chain card. */
