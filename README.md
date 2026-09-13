@@ -4,9 +4,9 @@ INTE2581 S2 2026 · Assessment Task 3. This web mockup shows how a Vietnamese ma
 
 > **The mockup simulates everything.** No real chain, wallet, payment, or AI exists. State lives in `localStorage`.
 
-## 60-second intro
+## Intro clip (≈15 s)
 
-![Purchase journey: sign in → buy license → pay → payment verify → license NFT with 90/10 split → ledger](docs/img/demo.gif)
+![Purchase journey: market → sign in → buy license → pay → payment verify → license NFT with 90/10 split → ledger → dashboard](docs/img/demo.gif)
 
 > Same clip as MP4 (click to download): [docs/img/demo.mp4](docs/img/demo.mp4)
 
@@ -14,15 +14,15 @@ INTE2581 S2 2026 · Assessment Task 3. This web mockup shows how a Vietnamese ma
 
 | | |
 |---|---|
-| **Market** — 5 seeded assets, filters, AI-verified chips | ![Market](docs/img/01-market.png) |
-| ![Asset detail](docs/img/02-asset-detail.png) | **Asset detail** — provenance, compatibility passport, license tiers with rights matrix |
-| **Checkout** — fiat method, 4-step indicator, decline-payment test toggle | ![Checkout](docs/img/03-checkout.png) |
-| ![License issued](docs/img/04-license-issued.png) | **License NFT issued** — serial `#1`, tx hash, 90/10 split table |
-| **Ledger** — every on/off-chain event, contract calls, reverts | ![Ledger](docs/img/05-ledger.png) |
-| ![Upload + AI provenance](docs/img/06-upload-provenance.png) | **Upload** — similarity/traceability sliders, verdict bands, mint queue |
+| **Market** — stat-led head, filter + search, SVG asset glyphs, AI-verified chips | ![Market](docs/img/01-market.png) |
+| ![Asset detail](docs/img/02-asset-detail.png) | **Asset detail** — provenance kv, compatibility passport, tiers with rights matrix, numbered checkout rail |
+| **Checkout** — fiat method, step rail (pay → verify → issue), decline-payment test toggle | ![Checkout](docs/img/03-checkout.png) |
+| ![License issued](docs/img/04-license-issued.png) | **License NFT issued** — serial `#1`, tx hash, 90/10 split table, toast |
+| **Ledger** — every on/off-chain event, contract calls, revert rows in lotus red | ![Ledger](docs/img/05-ledger.png) |
+| ![Upload + AI provenance](docs/img/06-upload-provenance.png) | **Upload** — similarity/traceability sliders with live readout, verdict bands from CONFIG, mint queue |
 | **Review** — human cultural-review queue for flagged assets | ![Review](docs/img/07-review.png) |
-| ![Dashboard](docs/img/08-dashboard.png) | **Dashboard** — owned License NFTs, usage checker (permit/revert), activity |
-| **Strategy** — architecture, limitations, Y0→Yx roadmap | ![Strategy](docs/img/09-strategy.png) |
+| ![Dashboard](docs/img/08-dashboard.png) | **Dashboard** — owned License NFTs, rights matrix, usage checker (permit/revert), activity ledger |
+| **Strategy** — architecture, limitations, Y0→Yx roadmap (long-document rhythm) | ![Strategy](docs/img/09-strategy.png) |
 | ![Mobile](docs/img/10-mobile.png) | **Responsive** — no horizontal scroll at 375 px |
 
 ## Run with Docker (recommended)
@@ -71,12 +71,12 @@ bun run dev      # build + serve → http://localhost:5173
 ```
 src/
   types.ts config.ts        # domain contract + tunables (bands, splits, chain names)
-  lib/                      # verification policy · license rights · royalty splits · ids
+  lib/                      # verification policy · license rights · royalty splits · glyphs · ids
   store.ts                  # pure state transitions (mint, issueLicense, transfer, usage)
   app.ts persist.ts flow.ts # commit() container · localStorage · purchase orchestration
   ui.ts                     # hyperscript h() + router + formatters (no framework)
   screens/                  # market · asset · upload · dashboard · review · strategy · overlays
-  style.css                 # OKLCH token system (Cobalt-family, dark)
+  style.css tokens.css      # Sen Lotus design system (OKLCH, locked tokens)
 tests/store.test.ts         # 12 bun tests: bands, splits, reverts, balances
 tests/e2e_smoke.py          # 35-check Playwright journey suite
 docs/SRS.md USER_GUIDE.md   # requirements spec · walkthrough
