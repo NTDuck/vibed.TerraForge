@@ -3,10 +3,10 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json bun.lock* ./
-RUN npm install --save-dev bun && npx bun install
+RUN apk add --no-cache python3 && npm install --save-dev bun && npx bun install
 COPY . .
 RUN ./node_modules/.bin/bun run build
-RUN bash tools/build-fonts.sh
+RUN python3 tools/build_fonts.py
 # bun build emits only JS+CSS assets; the shell page must ship too (paths rewritten /dist/* -> /*)
 COPY index.html dist/index.html
 RUN sed -i 's|\./dist/|/|g' dist/index.html

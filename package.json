@@ -5,9 +5,10 @@
   "scripts": {
     "check": "bunx tsc --noEmit",
     "test": "bun test",
-    "build": "bun build src/main.ts --outdir dist --minify && bash tools/build-fonts.sh",
+    "build": "bun build src/main.ts --outdir dist --minify && python3 tools/build_fonts.py",
     "serve": "bun serve.ts",
-    "dev": "bun run build && bun run serve"
+    "dev": "bun run build && bun run serve",
+    "fonts": "python3 tools/build_fonts.py"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",

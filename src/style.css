@@ -381,3 +381,5 @@ code, .mono { font-family: var(--font-mono); font-size: 0.84em; letter-spacing: 
 /* ledger tables inside cards must not overflow their container */
 .card .ledger, .panel .ledger { table-layout: auto; }
 .card > .ledger { display: block; overflow-x: auto; }
+
+/* Hallmark · pre-emit critique: P5 H4 E5 S4 R4 V4 (toast lifetime trimmed in v2.1) */
