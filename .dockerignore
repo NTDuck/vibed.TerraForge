@@ -1,0 +1,5 @@
+node_modules
+.venv-test
+.git
+*.md
+!README.md

@@ -1,0 +1,1 @@
+# set BASE via env DOCKER_E2E=1: reads BASE from env
