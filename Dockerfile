@@ -11,5 +11,8 @@ RUN python3 tools/build_fonts.py
 COPY index.html dist/index.html
 RUN sed -i 's|\./dist/|/|g' dist/index.html
 COPY docs/img/assets dist/img/assets
+
+FROM nginx:1.27-alpine
+COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
