@@ -1,8 +1,8 @@
 import { commit, getState } from '../app';
-import { glyphFor } from '../lib/glyph';
-import { startPurchase, setPurchaseStep } from '../store';
+import { startPurchase, setPurchaseStep, toggleLedger } from '../store';
 import { runPurchase } from '../flow';
 import { CONFIG } from '../config';
+import { gallery } from '../lib/compat-ui';
 import { h, fmt, fmtDate, verifChip, navTo } from '../ui';
 import type { Asset, LicenseTier, PurchaseState, Split } from '../types';
 
@@ -17,15 +17,109 @@ function stepsIndicator(purchase: PurchaseState): HTMLElement {
   );
 }
 
-function rightsRow(rights: LicenseTier['rights']): HTMLElement {
-  const cell = (label: string, on: boolean) =>
-    h('span', { class: `right ${on ? 'yes' : 'no'}` }, label);
-  return h('div', { class: 'rights' },
-    cell('Commercial', rights.commercial),
-    cell('Modify', rights.modification),
-    cell('Game integration', rights.gameIntegration),
-    cell('Resale', rights.resale),
+function rightsTable(tier: LicenseTier): HTMLElement {
+  const r = tier.rights;
+  return h('table', { class: 'ledger' },
+    h('thead', {}, h('tr', {},
+      h('th', {}, 'Licence type'),
+      h('th', {}, 'Price'),
+      h('th', {}, 'Commercial'),
+      h('th', {}, 'Modify'),
+      h('th', {}, 'Redistribute'),
+      h('th', {}, 'Secondary sale'))),
+    h('tbody', {}, h('tr', {},
+      h('td', {}, tier.name),
+      h('td', { class: 'amount' }, fmt(tier.priceVnd)),
+      h('td', {}, r.commercial ? 'Yes' : 'No'),
+      h('td', {}, r.modification ? 'Yes' : 'No'),
+      h('td', {}, r.gameIntegration ? 'Yes' : 'No'),
+      h('td', {}, r.resale ? 'Allowed + 10% royalty' : 'Not allowed'))),
   );
+}
+
+/** dec: accordion section. Open/closed lives in the DOM, not in store state. */
+function accBlock(title: string, open: boolean, body: HTMLElement, badge?: HTMLElement): HTMLElement {
+  const head = h('button', { class: 'acc-head', type: 'button' },
+    h('span', { class: 'row', style: 'gap: var(--space-2)' }, h('h3', {}, title), badge ?? null),
+    h('span', { class: 'muted', 'aria-hidden': 'true' }, '▾'));
+  const el = h('div', { class: `acc${open ? ' open' : ''}` }, head, h('div', { class: 'acc-body' }, body));
+  head.addEventListener('click', () => el.classList.toggle('open'));
+  return el;
+}
+
+const compatChip = (asset: Asset): HTMLElement => {
+  const st = asset.verification.compat?.status;
+  if (st === 'verified') return h('span', { class: 'chip chip-ok' }, 'Compatibility verified');
+  if (st === 'needs-review') return h('span', { class: 'chip chip-warn' }, 'Compatibility needs review');
+  return h('span', { class: 'chip chip-off' }, 'Compatibility pending');
+};
+
+/** dec: four collapsible blocks mirror the docx layout: overview, spec, rights, chain record. */
+function detailBlocks(asset: Asset, creatorName: string): HTMLElement[] {
+  const v = asset.verification;
+
+  const overview = h('dl', { class: 'kv' },
+    h('dt', {}, 'Asset name'), h('dd', {}, asset.name),
+    h('dt', {}, 'Description'), h('dd', {}, asset.blurb),
+    h('dt', {}, 'Creator'), h('dd', {}, creatorName),
+    h('dt', {}, 'Creator profile'), h('dd', {}, 'Independent environment studio'),
+    h('dt', {}, 'Asset category'), h('dd', {}, 'AI-assisted cultural environment kit'),
+    h('dt', {}, 'Use case'), h('dd', {}, 'Game environments, level dressing, cinematics'),
+    h('dt', {}, 'Verification status'),
+    h('dd', { class: 'row' }, verifChip(v.status), compatChip(asset)),
+  );
+
+  const spec = asset.spec;
+  const tech = h('dl', { class: 'kv' },
+    h('dt', {}, 'Asset type'), h('dd', {}, 'Environment kit'),
+    h('dt', {}, 'File format'), h('dd', {}, spec?.format ?? 'Not declared'),
+    h('dt', {}, 'Polygon count'),
+    h('dd', {}, spec ? `${spec.tris.toLocaleString('en-US')} tris` : 'Not declared'),
+    h('dt', {}, 'Texture'), h('dd', {}, spec?.texture ?? 'Not declared'),
+    h('dt', {}, 'Animations'),
+    h('dd', {}, spec ? `${spec.animations} included` : 'Not declared'),
+    h('dt', {}, 'Engine compatibility'),
+    h('dd', {}, asset.passport.platforms.length
+      ? asset.passport.platforms.join(', ')
+      : 'Not declared'),
+  );
+
+  const rights = h('div', { class: 'flow' },
+    asset.tiers.map((t) => rightsTable(t)),
+    h('p', { class: 'sm muted' }, 'Licence scope: commercial game development · Duration: perpetual'),
+  );
+
+  const cred = asset.credential;
+  const chain = cred
+    ? h('dl', { class: 'kv' },
+        h('dt', {}, 'Credential ID'), h('dd', {}, cred.id),
+        h('dt', {}, 'Token standard'), h('dd', {}, 'ERC-721 (non-transferable)'),
+        h('dt', {}, 'Network'), h('dd', {}, CONFIG.chain.network),
+        h('dt', {}, 'Smart contract address'),
+        h('dd', {}, h('button', {
+          class: 'addr', type: 'button', onclick: () => commit(toggleLedger),
+        }, cred.contractAddress)),
+        h('dt', {}, 'Token ID'), h('dd', {}, cred.tokenId),
+        h('dt', {}, 'Issuer'), h('dd', {}, cred.issuer),
+        h('dt', {}, 'Holder wallet'), h('dd', {}, cred.holder),
+        h('dt', {}, 'Credential type'), h('dd', {}, cred.type),
+        h('dt', {}, 'Issue date'), h('dd', {}, cred.issueDate),
+        h('dt', {}, 'Status'), h('dd', {}, h('span', { class: 'chip chip-ok' }, 'Active ✓')),
+        h('dt', {}, 'Transferability'), h('dd', {}, 'Disabled ✓'),
+        h('dt', {}, 'Verification record'), h('dd', {}, 'Verified ✓'),
+        h('dt', {}, 'Transaction hash'),
+        h('dd', {}, h('button', {
+          class: 'addr', type: 'button', onclick: () => commit(toggleLedger),
+        }, cred.txHash)),
+      )
+    : h('p', { class: 'muted sm' }, 'No credential yet — complete dual verification and mint.');
+
+  return [
+    accBlock('Overview', true, overview, h('span', { class: 'badge' }, asset.kind)),
+    accBlock('Technical Specification', false, tech),
+    accBlock('Rights & Licensing', false, rights),
+    accBlock('Blockchain / Settlement Record', false, chain),
+  ];
 }
 
 /** dec: splits table prefers the live purchase splits, falls back to the last sale of this asset. */
@@ -114,6 +208,18 @@ function purchasePanel(asset: Asset, tier: LicenseTier): HTMLElement {
   );
 }
 
+/** dec: per-tier rights chips for the tier card. */
+function rightsRow(rights: LicenseTier['rights']): HTMLElement {
+  const cell = (label: string, on: boolean) =>
+    h('span', { class: `right ${on ? 'yes' : 'no'}` }, label);
+  return h('div', { class: 'rights' },
+    cell('Commercial', rights.commercial),
+    cell('Modify', rights.modification),
+    cell('Game integration', rights.gameIntegration),
+    cell('Resale', rights.resale),
+  );
+}
+
 function tierCard(asset: Asset, tier: LicenseTier): HTMLElement {
   const s = getState();
   const buy = () => {
@@ -146,36 +252,17 @@ export function renderAsset(id: string): HTMLElement {
   }
 
   const creator = s.users[asset.creatorId];
-  const v = asset.verification;
   const minted = asset.tokenId != null;
   const purchaseActive = s.purchase?.assetId === asset.id;
   const activeTier = purchaseActive ? asset.tiers.find((t) => t.id === s.purchase!.tierId) : undefined;
 
-  // dec: left column is two sibling cards (detail + passport) — no nested card-in-card
+  // dec: gallery card on top, then the four collapsible blocks below it.
   const left = h('div', { class: 'flow' },
     h('div', { class: 'card' },
-      h('div', { class: 'preview' }, glyphFor(asset.kind, 96)),
+      gallery(asset.images, asset.kind, 420),
       h('h1', {}, asset.name),
-      h('p', { class: 'muted' }, asset.blurb),
-      h('dl', { class: 'kv' },
-        h('dt', {}, 'Creator'), h('dd', {}, creator?.name ?? asset.creatorId),
-        h('dt', {}, 'Model'), h('dd', {}, asset.model),
-        h('dt', {}, 'Similarity'), h('dd', {}, `${v.similarity.toFixed(1)}%`),
-        h('dt', {}, 'Traceability'), h('dd', {}, `${v.traceability.toFixed(0)}%`),
-      ),
-      v.reasons?.length
-        ? h('ul', { class: 'sm muted' }, v.reasons.map((r) => h('li', {}, r)))
-        : null,
-      h('div', { class: 'row' }, verifChip(v.status)),
     ),
-    h('div', { class: 'card' },
-      h('h3', {}, 'Compatibility passport'),
-      asset.passport.platforms.length || asset.passport.formats.length
-        ? h('div', { class: 'row' },
-            asset.passport.platforms.map((p) => h('span', { class: 'chip chip-chain' }, p)),
-            asset.passport.formats.map((f) => h('span', { class: 'chip' }, f)))
-        : h('p', { class: 'muted sm' }, 'passport not declared yet'),
-    ),
+    h('div', { class: 'tbl-blocks' }, detailBlocks(asset, creator?.name ?? asset.creatorId)),
   );
 
   // dec: right column stacks mint status and each tier as its own card

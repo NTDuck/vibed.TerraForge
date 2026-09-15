@@ -55,6 +55,8 @@ function identityCard(s: State): HTMLElement {
           h('tr', { style: u.id === s.session ? 'font-weight:600' : undefined },
             h('td', {}, u.name, u.id === s.session ? h('span', { class: 'chip', style: 'margin-left:6px' }, 'you') : null),
             h('td', { class: 'mono', style: 'text-align:right' }, fmt(u.vnd)))))),
+    h('p', { class: 'sm muted' },
+      'Network: Polygon — credentials are non-transferable ERC-721 records.'),
     h('h3', {}, 'My license NFTs'),
     myLicenses.length === 0
       ? h('p', { class: 'muted sm' }, 'No licenses yet — buy one from the market.')
@@ -78,16 +80,58 @@ export function renderWalletOverlay(): HTMLElement {
   return backdrop(s.session ? identityCard(s) : connectCard());
 }
 
-function callCell(tx: Tx): HTMLElement {
+/** dec: 0x… hashes and contract calls are clickable — clicking flashes the row
+ * for 2s (we are already inside the ledger, nothing else to open). */
+const flashRow = (row: HTMLElement): void => {
+  row.classList.add('flash');
+  row.style.background = 'color-mix(in oklab, var(--accent) 16%, transparent)';
+  row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  setTimeout(() => {
+    row.classList.remove('flash');
+    row.style.background = '';
+  }, 2000);
+};
+
+const addrBtn = (label: string, row: HTMLElement): HTMLElement =>
+  h('button', { class: 'addr', onclick: () => flashRow(row) }, label);
+
+/** dec: split label on 0x… hashes and render each as an .addr button. */
+const labelCell = (label: string, row: HTMLElement): HTMLElement => {
+  const parts = label.split(/(0x[0-9a-zA-Z.]+)/);
+  return h('td', {}, ...parts.map((p) =>
+    /^0x[0-9a-zA-Z.]+$/.test(p) ? addrBtn(p, row) : p));
+};
+
+function callCell(tx: Tx, row: HTMLElement): HTMLElement {
   if (!tx.call) return h('td', { class: 'faint' }, '—');
   const c = tx.call;
-  return h('td', { class: 'mono' }, `${c.contract}.${c.fn}(${c.args.join(', ')})`);
+  return h('td', { class: 'mono' },
+    addrBtn(`${c.contract}.${c.fn}(${c.args.join(', ')})`, row));
 }
+
 export function renderLedgerOverlay(): HTMLElement {
   const s = getState();
   const onChain = s.txs.filter((t) => t.onChain && t.status === 'confirmed').length;
   const offChain = s.txs.filter((t) => !t.onChain && t.status === 'confirmed').length;
   const reverted = s.txs.filter((t) => t.status === 'reverted').length;
+
+  // dec: newest confirmed tx glows tiffany (one .now row per table).
+  const nowId = s.txs.find((t) => t.status === 'confirmed')?.id;
+  const row = (t: Tx): HTMLElement => {
+    const tr = h('tr', {
+      id: `tx-${t.id}`,
+      class: t.id === nowId ? 'now' : t.status === 'reverted' ? 'reverted' : undefined,
+    },
+      h('td', { class: 'mono' }, fmtDate(t.ts)),
+      h('td', { class: 'mono muted' }, t.kind));
+    // dec: label + call cells need the row ref for click-flash, so append after.
+    tr.append(
+      labelCell(t.label, tr),
+      callCell(t, tr),
+      h('td', {}, onchainChip(t.onChain)),
+      h('td', {}, h('span', { class: `chip ${t.status === 'confirmed' ? 'chip-ok' : 'chip-err'}` }, t.status)));
+    return tr;
+  };
 
   const table = h('table', { class: 'ledger' },
     h('thead', {}, h('tr', {},
@@ -97,19 +141,11 @@ export function renderLedgerOverlay(): HTMLElement {
       h('th', {}, 'Call'),
       h('th', {}, 'Chain'),
       h('th', {}, 'Status'))),
-    h('tbody', {},
-      ...s.txs.map((t) =>
-        h('tr', { class: t.status === 'reverted' ? 'reverted' : undefined },
-          h('td', { class: 'mono' }, fmtDate(t.ts)),
-          h('td', { class: 'mono muted' }, t.kind),
-          h('td', {}, t.label),
-          callCell(t),
-          h('td', {}, onchainChip(t.onChain)),
-          h('td', {}, h('span', { class: `chip ${t.status === 'confirmed' ? 'chip-ok' : 'chip-err'}` }, t.status))))));
+    h('tbody', {}, ...s.txs.map(row)));
 
   return backdrop(h('div', { class: 'panel wide' },
     h('div', { class: 'row spread' },
-      h('h2', { style: 'margin:0' }, 'Transaction ledger'),
+      h('h2', { style: 'margin:0' }, 'SERSE Audit Ledger'),
       h('div', { class: 'row' },
         h('span', { class: 'chip chip-chain' }, `${onChain} on-chain`),
         h('span', { class: 'chip chip-off' }, `${offChain} off-chain`),
@@ -119,3 +155,4 @@ export function renderLedgerOverlay(): HTMLElement {
       : table,
   ));
 }
+

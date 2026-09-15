@@ -1,7 +1,13 @@
 import { getState } from '../app';
-import { glyphFor } from '../lib/glyph';
+import { gallery } from '../lib/compat-ui';
 import { h, fmt, verifChip, navTo } from '../ui';
 import type { Asset } from '../types';
+/** dec: filter state is local to the screen — the store stays pure domain state. */
+let kindFilter = 'all';
+let query = '';
+
+const cheapestTier = (a: Asset): number =>
+  a.tiers.length ? Math.min(...a.tiers.map((t) => t.priceVnd)) : 0;
 
 const ASSET_KINDS: Array<[string, string]> = [
   ['character', 'Characters'],
@@ -11,13 +17,6 @@ const ASSET_KINDS: Array<[string, string]> = [
   ['audio', 'Audio'],
   ['environment', 'Environments'],
 ];
-
-/** dec: filter state is local to the screen — the store stays pure domain state. */
-let kindFilter = 'all';
-let query = '';
-
-const cheapestTier = (a: Asset): number =>
-  a.tiers.length ? Math.min(...a.tiers.map((t) => t.priceVnd)) : 0;
 
 function assetCard(a: Asset): HTMLElement {
   const creator = getState().users[a.creatorId];
@@ -35,7 +34,7 @@ function assetCard(a: Asset): HTMLElement {
         }
       },
     },
-    h('div', { class: 'preview' }, glyphFor(a.kind, 56)),
+    h('div', { class: 'preview' }, gallery(a.images, a.kind, 56)),
     h('h3', {}, a.name),
     // dec: price+creator lead the card. Meta chips sit below as secondary info.
     h('div', { class: 'row spread', style: 'margin-top: var(--space-2)' },
@@ -95,12 +94,12 @@ export function renderMarket(): HTMLElement {
   });
   return h('section', { class: 'wrap' },
     // dec: two-row head — h1 + one-line sub, then chip row. No hero plate.
-    h('h1', {}, 'AI game asset market'),
-    h('p', { class: 'muted' }, 'Licensed AI-generated game assets with on-chain provenance and VND fiat checkout.'),
+    h('h1', {}, 'TerraForge market'),
+    h('p', { class: 'muted' }, 'Polygon-anchored environment kits with dual verification and VND checkout.'),
     h('div', { class: 'row', style: 'margin-bottom: var(--space-4)' },
-      h('span', { class: 'chip chip-chain' }, '⛓ SenChain testnet'),
+      h('span', { class: 'chip chip-chain' }, '⛓ Polygon'),
       h('span', { class: 'chip' }, 'VND fiat'),
-      h('span', { class: 'chip chip-ok' }, 'AI provenance'),
+      h('span', { class: 'chip chip-ok' }, 'Dual verification (AI + compat)'),
     ),
     // dec: kind left, search right. Search gets a floor width so the row never collapses.
     h('div', { class: 'row spread', style: 'margin-bottom: var(--space-4)' },

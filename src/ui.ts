@@ -73,4 +73,5 @@ export const ROLES = [
   { id: 'u-an', label: 'An Trần — creator', hint: 'Upload assets, mint, track royalties' },
   { id: 'u-binh', label: 'Bình Lê — buyer', hint: 'Buy licenses, resell, usage checks' },
   { id: 'u-chi', label: 'Chị Phạm — reviewer', hint: 'Cultural review queue' },
+  { id: 'u-minh', label: 'Minh Vũ — buyer', hint: 'Buy licenses from other players on the resale market' },
 ] as const;

@@ -1,8 +1,9 @@
 import { commit, getState } from '../app';
-import { mint, resolveVerification, submitAsset } from '../store';
+import { mint, resolveVerification, startCompat, finishCompat, submitAsset } from '../store';
 import { CONFIG } from '../config';
-import { glyphFor } from '../lib/glyph';
+import { compatRow } from '../lib/compat-ui';
 import { h, fmtDate, navTo, notify, verifChip, ROLES } from '../ui';
+import { glyphFor } from '../lib/glyph';
 import type { Asset, AssetKind } from '../types';
 
 const KINDS: AssetKind[] = ['character', 'skin', 'accessory', 'artwork', 'audio', 'environment'];
@@ -47,6 +48,12 @@ function uploadForm(): HTMLElement {
   const traceVal = h('span', { class: 'val' });
   bindRange(sim, simVal);
   bindRange(trace, traceVal);
+  const imgUrl = h('input', { type: 'text', placeholder: 'https://… or leave empty' }) as HTMLInputElement;
+  const galleryUrls = h('textarea', { rows: 3, placeholder: 'https://… one per line' }) as HTMLTextAreaElement;
+  const platChecks = CONFIG.compatPlatforms.map((p) => ({
+    p,
+    box: h('input', { type: 'checkbox', checked: true }) as HTMLInputElement,
+  }));
 
   const submit = h(
     'button',
@@ -59,6 +66,10 @@ function uploadForm(): HTMLElement {
           notify('warn', 'Give the asset a name before submitting.');
           return;
         }
+        const display = imgUrl.value.trim();
+        const lines = galleryUrls.value.split('\n').map((l) => l.trim()).filter((l) => l.length > 0 && l !== display);
+        const images = display ? { display, gallery: [display, ...lines] } : undefined;
+        const platforms = platChecks.filter((x) => x.box.checked).map((x) => x.p);
         let asset: Asset | undefined;
         commit((s) => {
           const r = submitAsset(s, {
@@ -68,18 +79,20 @@ function uploadForm(): HTMLElement {
             model: model.value,
             similarity: Number(sim.value),
             traceability: Number(trace.value),
-            platforms: [],
+            platforms,
           });
           asset = r.asset;
           return r.state;
         });
         // dec: resolve immediately in a second commit so the asset lands with its
         // assess() verdict (same bands shown under this form) before navigating.
+        // The same commit attaches the pasted image URLs. store stays pure.
         let verdictId = '';
         commit((st) => {
           const r = resolveVerification(st, asset!.id);
           verdictId = r.asset.id;
-          return r.state;
+          if (!images) return r.state;
+          return { ...r.state, assets: r.state.assets.map((x) => (x.id === r.asset.id ? { ...x, images } : x)) };
         });
         navTo('asset', verdictId);
       },
@@ -100,9 +113,53 @@ function uploadForm(): HTMLElement {
     h('p', { class: 'faint sm' }, 'Verdict comes from the same assess() bands shown below.'),
     h('h3', null, 'How verification works'),
     verificationBands(),
+    h('div', { class: 'field' }, h('label', null, 'Display image URL'), imgUrl),
+    h('div', { class: 'field' }, h('label', null, 'Gallery URLs (one per line)'), galleryUrls),
+    h('div', { class: 'field' }, h('label', null, 'Target platforms'), platChecks.map((x) => h('label', { class: 'row', style: 'gap: var(--space-2); align-items: center' }, x.box, x.p))),
     h('div', { class: 'field', style: 'margin-top: var(--space-4); margin-bottom: 0' }, submit),
   );
 }
+
+/** dec: compatibility passport for the newest upload. Chips show the target
+ * engines. The button runs the second verification layer. Criterion rows
+ * appear after the run. A fail routes the asset to human review. */
+function compatCard(a: Asset): HTMLElement {
+  const run = a.verification.compat!;
+  const kids: unknown[] = [
+    h('h3', null, 'Compatibility passport'),
+    h('p', { class: 'sm muted', style: 'margin:0' }, a.name),
+    h('div', { class: 'row' }, ...run.platforms.map((p) => h('span', { class: 'chip' }, p))),
+  ];
+  if (run.status === 'pending') {
+    kids.push(
+      h('div', { class: 'row' },
+        h('button', {
+          class: 'btn accent sm',
+          type: 'button',
+          onclick: () => {
+            commit((s) => startCompat(s, a.id).state);
+            setTimeout(() => commit((s) => finishCompat(s, a.id).state), 600 * CONFIG.demoSpeed);
+          },
+        }, 'Run Compatibility check'),
+      ),
+    );
+  } else if (run.status === 'running') {
+    kids.push(h('p', { class: 'sm muted' }, 'Engine checks are running…'));
+  } else {
+    for (const p of run.platforms) {
+      kids.push(h('h4', { style: 'margin-bottom: var(--space-1)' }, p));
+      kids.push(...(run.results[p] ?? []).map((c) => compatRow(c, c.pass ? 'pass' : 'fail')));
+    }
+    const allPass = run.platforms.every((p) => (run.results[p] ?? []).every((c) => c.pass));
+    kids.push(
+      h('div', { class: 'row' }, allPass
+        ? h('span', { class: 'chip chip-ok' }, 'Compatibility Verified')
+        : h('span', { class: 'chip chip-warn' }, 'Needs Review - routed to human reviewer')),
+    );
+  }
+  return h('div', { class: 'card' }, ...kids);
+}
+
 
 /** dec: one of my uploads — glyph, name, verdict + mint status chips. Rejected
  * rows surface only the first reason, with a faint "+n more" overflow marker. */
@@ -128,6 +185,10 @@ function uploadRow(a: Asset): HTMLElement {
     ),
   );
 
+  const gateOpen = v.status === 'verified' && v.compat?.status === 'verified';
+  const gateHint = v.status !== 'verified'
+    ? 'AI provenance must clear first'
+    : 'Both layers must verify before mint';
   const foot = h('div', { class: 'row' });
   if (v.status === 'verified' && !a.tokenId) {
     foot.append(
@@ -135,6 +196,8 @@ function uploadRow(a: Asset): HTMLElement {
         'button',
         {
           class: 'btn accent sm',
+          disabled: !gateOpen,
+          title: gateOpen ? undefined : `Mint gate: ${gateHint}. Both layers must verify before mint`,
           onclick: () => {
             let tokenId = '';
             commit((s) => {
@@ -161,6 +224,7 @@ function uploadRow(a: Asset): HTMLElement {
   return card;
 }
 
+
 export function renderUpload(): HTMLElement {
   const s = getState();
   const user = s.session ? s.users[s.session] : undefined;
@@ -179,6 +243,8 @@ export function renderUpload(): HTMLElement {
   }
 
   const mine = s.assets.filter((a) => a.creatorId === user.id);
+  const newest = mine[mine.length - 1];
+  const passport = newest && newest.verification.compat ? compatCard(newest) : null;
   return h(
     'section',
     { class: 'wrap' },
@@ -188,6 +254,7 @@ export function renderUpload(): HTMLElement {
       'div',
       { class: 'grid two' },
       uploadForm(),
+      h('div', null, passport),
       h(
         'div',
         null,

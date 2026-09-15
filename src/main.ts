@@ -10,6 +10,7 @@ import { renderUpload } from './screens/upload';
 import { renderDashboard } from './screens/dashboard';
 import { renderReview } from './screens/review';
 import { renderStrategy } from './screens/strategy';
+import { renderContracts } from './screens/contracts';
 import { renderWalletOverlay, renderLedgerOverlay } from './screens/overlays';
 import { ROLES } from './ui';
 
@@ -22,6 +23,7 @@ const NAV = [
   { id: 'upload', label: 'Upload' },
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'review', label: 'Review' },
+  { id: 'contracts', label: 'Smart contracts' },
   { id: 'strategy', label: 'Strategy' },
 ];
 
@@ -71,6 +73,7 @@ const SCREENS: Record<string, (id?: string) => HTMLElement> = {
   upload: () => renderUpload(),
   dashboard: () => renderDashboard(),
   review: () => renderReview(),
+  contracts: () => renderContracts(),
   strategy: () => renderStrategy(),
 };
 

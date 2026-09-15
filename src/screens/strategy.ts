@@ -30,7 +30,7 @@ export function renderStrategy(): HTMLElement {
 
     // 1 — Integrated strategy
     h('h1', {}, 'Strategy'),
-    h('p', { class: 'muted' }, 'SenChain — a Vietnamese marketplace for AI-generated game assets, where provenance is verified off-chain and ownership is enforced on-chain.'),
+    h('p', { class: 'muted' }, 'TerraForge — a Vietnamese marketplace for AI-generated game assets, where provenance is verified off-chain and ownership is enforced on-chain.'),
     h('h2', {}, 'Integrated strategy'),
     h('div', { class: 'grid two' },
       h('div', { class: 'card' },
@@ -87,7 +87,7 @@ export function renderStrategy(): HTMLElement {
         sig('royaltySplit → creator / platform', 'Deterministic split at transfer time; nothing to renegotiate.'),
       ),
       h('div', { class: 'card' },
-        h('div', { class: 'row' }, h('h3', { class: 'grow' }, 'Off-chain'), h('span', { class: 'chip chip-off' }, 'kast judgement layer')),
+        h('div', { class: 'row' }, h('h3', { class: 'grow' }, 'Off-chain'), h('span', { class: 'chip chip-off' }, 'TerraForge judgement layer')),
         h('p', { class: 'sm' }, h('b', {}, 'AI provenance scan'), ' — ', h('span', { class: 'muted' }, 'similarity + traceability scoring against registered works; heavy models, private embeddings.')),
         h('p', { class: 'sm' }, h('b', {}, 'Human cultural review'), ' — ', h('span', { class: 'muted' }, 'reviewers judge cultural sensitivity a model cannot sign off on.')),
         h('p', { class: 'sm' }, h('b', {}, 'Fiat gateway'), ' — ', h('span', { class: 'muted' }, `${CONFIG.fiatMethods.join(' / ')} → the backend verifies the payment → a signed oracle reports the result to the chain.`)),
@@ -117,7 +117,7 @@ export function renderStrategy(): HTMLElement {
       ),
       h('div', { class: 'card' },
         h('h3', {}, 'AI as oracle, not chain feature'),
-        h('p', { class: 'sm' }, 'The AI layer is an off-chain oracle: it produces a signed verdict that the chain trusts but does not compute. Blockchain guarantees the verdict\u2019s integrity and attachment to the asset — it cannot run the model. This keeps SenChain\u2019s differentiation in the verification UX while the chain stays a minimal trust anchor (D-2/D-3).'),
+        h('p', { class: 'sm' }, 'The AI layer is an off-chain oracle: it produces a signed verdict that the chain trusts but does not compute. Blockchain guarantees the verdict\u2019s integrity and attachment to the asset — it cannot run the model. This keeps TerraForge\u2019s differentiation in the verification UX while the chain stays a minimal trust anchor (D-2/D-3).'),
         h('p', { class: 'sm faint' }, '[Group to extend: industry talk — compare with existing AI-asset provenance standards (C2PA, content credentials) and where on-chain anchoring adds value.]'),
       ),
     ),
@@ -143,7 +143,7 @@ export function renderStrategy(): HTMLElement {
     h('h2', {}, 'Development plan Y0 → Yx'),
       (
         [
-          ['Y0', 'Design + prototype', 'This mockup: full purchase, verification and royalty flows simulated against SenChain Testnet contracts.'],
+          ['Y0', 'Design + prototype', 'This mockup: full purchase, verification and royalty flows simulated against Polygon testnet contracts.'],
           ['Y1', 'Testnet pilot', 'Real testnet deployment, onboarding creators, first cultural review board convened.'],
           ['Y2', 'Mainnet + fiat rails', 'Mainnet launch with MoMo/ZaloPay/Napas settlement and an asset passport standard.'],
           ['Y3', 'Cross-platform passport', 'License passports consumed by Unity, Unreal and Godot plugins — the engine enforces rights.'],
@@ -158,6 +158,6 @@ export function renderStrategy(): HTMLElement {
     ),
 
     // 6 — Footer note
-    h('p', { class: 'sm faint' }, 'SenChain is a course mockup (INTE2581): no real blockchain, payments or AI inference — all state lives in the browser. See the project README for the whiteboard sections this screen summarises.'),
+    h('p', { class: 'sm faint' }, 'TerraForge is a course mockup (INTE2581): no real blockchain, payments or AI inference — all state lives in the browser. See the project README for the whiteboard sections this screen summarises.'),
   );
 }

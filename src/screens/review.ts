@@ -1,7 +1,9 @@
 import { commit, getState } from '../app';
 import { setReview, toggleWallet } from '../store';
-import { glyphFor } from '../lib/glyph';
+import { CONFIG } from '../config';
+import { compatRow, gallery } from '../lib/compat-ui';
 import { h, fmtDate, verifChip, notify } from '../ui';
+import { glyphFor } from '../lib/glyph';
 import { REVIEWER } from '../seed';
 import type { Asset } from '../types';
 
@@ -19,8 +21,35 @@ function personaBanner(): HTMLElement {
   );
 }
 
-/** dec: one reviewable asset — glyph + provenance on top, AI reasons, then the
- * verdict form. The textarea lives outside state. The click handler reads it. */
+/** dec: spec mini-table — the four numbers a reviewer needs for engine budgets. */
+function specTable(a: Asset): HTMLElement | null {
+  if (!a.spec) return null;
+  const cell = (k: string, v: string): HTMLElement =>
+    h('div', null, h('div', { class: 'faint sm' }, k), h('div', { class: 'sm' }, v));
+  return h(
+    'div',
+    { class: 'row', style: 'gap: var(--space-4)' },
+    cell('Format', a.spec.format),
+    cell('Triangles', a.spec.tris.toLocaleString('en-US')),
+    cell('Texture', a.spec.texture),
+    cell('Size', `${a.spec.sizeMb} MB`),
+  );
+}
+
+/** dec: compat findings — per-platform criteria when the flagged run needs review. */
+function compatFindings(a: Asset): HTMLElement | null {
+  const run = a.verification.compat;
+  if (!run || run.status !== 'needs-review') return null;
+  const rows: unknown[] = [h('h4', { style: 'margin-bottom: var(--space-1)' }, 'Compatibility findings')];
+  for (const p of CONFIG.compatPlatforms.filter((p) => run.platforms.includes(p))) {
+    rows.push(h('div', { class: 'sm', style: 'margin-top: var(--space-2)' }, h('strong', null, p)));
+    rows.push(...(run.results[p] ?? []).map((c) => compatRow(c, c.pass ? 'pass' : 'fail')));
+  }
+  return h('div', { style: 'margin-top: var(--space-3)' }, ...rows);
+}
+
+/** dec: one reviewable asset — gallery + blurb + spec + AI reasons + compat
+ * findings first, then the verdict form. The textarea lives outside state. */
 function reviewCard(asset: Asset, reviewerName: string): HTMLElement {
   const v = asset.verification;
   const creator = getState().users[asset.creatorId]?.name ?? asset.creatorId;
@@ -44,14 +73,19 @@ function reviewCard(asset: Asset, reviewerName: string): HTMLElement {
         h('div', { class: 'sm muted' }, `by ${creator} · model: ${asset.model}`)),
       verifChip(v.status),
     ),
+    h('p', { class: 'sm muted', style: 'margin: var(--space-3) 0 0' }, asset.blurb),
+    gallery(asset.images, asset.kind, 320),
+    specTable(asset),
     h('dl', { class: 'kv', style: 'margin-top: var(--space-3)' },
       h('dt', null, 'Similarity'),
       h('dd', null, `${v.similarity.toFixed(1)}%`),
       h('dt', null, 'Traceability'),
       h('dd', null, `${v.traceability.toFixed(0)}%`),
     ),
+    h('div', { class: 'faint sm', style: 'margin-top: var(--space-3)' }, 'AI reasons'),
     h('ul', { class: 'sm muted' },
       ...(v.reasons ?? ['No AI reasons recorded.']).map((r) => h('li', null, r))),
+    compatFindings(asset),
     h('div', { class: 'field' },
       h('label', null, 'Reviewer note'),
       note,

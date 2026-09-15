@@ -1,5 +1,6 @@
 import { commit, getState } from '../app';
 import { recordUsage, transferLicense } from '../store';
+import { RESELLER } from '../seed';
 import { checkRights, USAGES, USAGE_LABEL, type Usage } from '../lib/license';
 import { h, fmt, fmtDate, verifChip, onchainChip, notify, navTo } from '../ui';
 import type { LicenseRights, LicenseNft, Sale, State, Tx } from '../types';
@@ -40,7 +41,6 @@ const creatorCutOf = (s: State, sale: Sale): number | null => {
     (x) => x.to === s.session && (x.kind === 'creator' || x.kind === 'royalty'));
   return sp ? sp.vnd : null;
 };
-
 const licenseCard = (s: State, lic: LicenseNft): HTMLElement => {
   const asset = s.assets.find((a) => a.id === lic.assetId);
   const tier = asset?.tiers.find((t) => t.id === lic.tierId);
@@ -51,17 +51,34 @@ const licenseCard = (s: State, lic: LicenseNft): HTMLElement => {
     'aria-label': 'Resale price (VND)',
   }) as HTMLInputElement;
 
+  // dec: transfer target — every user except the owner; treasury excluded.
+  // Defaults to Minh Vũ (buyer 2) so the buyer1 → buyer2 story is one click.
+  const targets = Object.values(s.users).filter(
+    (u) => u.id !== lic.ownerId && u.role !== 'platform');
+  let targetId = targets.some((u) => u.id === RESELLER) ? RESELLER : targets[0].id;
+  const targetName = (): string => s.users[targetId]?.name ?? targetId;
+  const targetSelect = h('select', {
+    'aria-label': 'Transfer license to',
+    onchange: (e: Event) => {
+      targetId = (e.target as HTMLSelectElement).value;
+      transferBtn.textContent = `Transfer to ${targetName()}`;
+    },
+  }, ...targets.map((u) =>
+    h('option', { value: u.id, selected: u.id === targetId }, `${u.name} — ${u.role}`)));
+
   const doTransfer = (): void => {
     const price = Math.max(0, Math.floor(Number(priceInput.value) || 0));
     let err: string | undefined;
     commit((st) => {
-      const r = transferLicense(st, lic.id, 'u-chi', price);
+      const r = transferLicense(st, lic.id, targetId, price);
       err = r.error;
       return r.state;
     });
     if (err) notify('err', err);
-    else notify('ok', 'License transferred to Chị Phạm — they are now the NFT owner.');
+    else notify('ok', `License transferred to ${targetName()} — they are now the NFT owner.`);
   };
+  const transferBtn = h('button', { class: 'btn sm', onclick: doTransfer },
+    `Transfer to ${targetName()}`);
 
   let usage: Usage = USAGES[0];
   const checkPermit = (): void => {
@@ -87,9 +104,10 @@ const licenseCard = (s: State, lic: LicenseNft): HTMLElement => {
           h('label', {}, 'Resale price'),
           h('div', { class: 'row' },
             priceInput,
-            h('button', { class: 'btn sm', onclick: doTransfer }, 'Transfer to Chị Phạm'))),
+            targetSelect,
+            transferBtn)),
         h('p', { class: 'sm faint' },
-          'Demo transfer to the reviewer persona — 10% royalty routes back to the creator on-chain.'))
+          'On-chain transfer via LicenseEnforcer.resale — 10% royalty routes back to the creator.'))
     : null;
 
   const usageBox = h('div', {},
@@ -159,11 +177,14 @@ function creatorSection(s: State): HTMLElement {
     h('h2', {}, 'Royalties'),
     royaltiesLedger(s),
     h('h2', {}, 'My assets'),
-    myAssetsCard(s));
+    myAssetsCard(s),
+    h('h2', {}, 'My licenses'),
+    licensesGrid(s));
 }
 
 function reviewerSection(s: State): HTMLElement {
   const queue = s.assets.filter((a) => a.verification.status === 'needs-review');
+  const mine = s.licenses.filter((l) => l.ownerId === s.session);
   return h('div', {},
     h('h2', {}, 'Review queue'),
     h('div', { class: 'banner' },
@@ -174,36 +195,46 @@ function reviewerSection(s: State): HTMLElement {
         h('div', { class: 'row' },
           h('span', { class: `chip ${queue.length > 0 ? 'chip-warn' : 'chip-ok'}` },
             `${queue.length} needs review`),
-          h('button', { class: 'btn sm', onclick: () => navTo('review') }, 'Go to Review tab')))));
+          h('button', { class: 'btn sm', onclick: () => navTo('review') }, 'Go to Review tab')))),
+    mine.length > 0
+      ? h('div', {},
+          h('h2', {}, 'My licenses'),
+          licensesGrid(s))
+      : null);
 }
 
 function buyerSection(s: State): HTMLElement {
-  const mine = s.licenses.filter((l) => l.ownerId === s.session);
   return h('div', {},
     h('h2', {}, 'My licenses'),
     h('div', { class: 'banner sm' },
       'Testing the revert path? The declined-payment simulation lives on the asset purchase panel (Market → an asset).'),
-    mine.length === 0
-      ? empty('No licenses yet — buy one from the Market.')
-      : h('div', { class: 'grid two' }, ...mine.map((l) => licenseCard(s, l))));
+    licensesGrid(s));
+}
+
+/** dec: shared license list — creator, reviewer and buyer views all render the
+ * same cards (feedback: creator purchases show under My licenses too). */
+function licensesGrid(s: State): HTMLElement {
+  const mine = s.licenses.filter((l) => l.ownerId === s.session);
+  if (mine.length === 0) return empty('No licenses yet — buy one from the Market.');
+  return h('div', { class: 'grid two' }, ...mine.map((l) => licenseCard(s, l)));
 }
 
 /** dec: ledger rows — reverted rows carry .reverted so .ledger tints the row. */
 function recentActivity(s: State): HTMLElement {
   if (s.txs.length === 0) return empty('Nothing on the ledger yet — your calls will appear here.');
-  const row = (t: Tx): HTMLElement =>
-    h('tr', { class: t.status === 'reverted' ? 'reverted' : undefined },
+  const row = (t: Tx, latest: boolean): HTMLElement =>
+    h('tr', { class: latest ? 'now' : t.status === 'reverted' ? 'reverted' : undefined },
       h('td', { class: 'mono' }, fmtDate(t.ts)),
       h('td', {}, t.label),
       h('td', {}, onchainChip(t.onChain)),
       h('td', {},
         h('span', { class: `chip ${t.status === 'reverted' ? 'chip-err' : 'chip-ok'}` }, t.status)));
   return h('div', {},
-    h('h2', {}, 'Recent activity'),
+    h('h2', {}, 'SERSE Audit Ledger — recent activity'),
     h('table', { class: 'ledger' },
       h('thead', {}, h('tr', {},
         h('th', {}, 'Time'), h('th', {}, 'Call'), h('th', {}, 'Ledger'), h('th', {}, 'Status'))),
-      h('tbody', {}, ...s.txs.slice(0, 6).map(row))));
+      h('tbody', {}, ...s.txs.slice(0, 6).map((t, i) => row(t, i === 0)))));
 }
 
 export function renderDashboard(): HTMLElement {
