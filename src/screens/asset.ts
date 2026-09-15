@@ -2,8 +2,8 @@ import { commit, getState } from '../app';
 import { startPurchase, setPurchaseStep, toggleLedger } from '../store';
 import { runPurchase } from '../flow';
 import { CONFIG } from '../config';
-import { gallery } from '../lib/compat-ui';
-import { h, fmt, fmtDate, verifChip, navTo } from '../ui';
+import { h, fmt, fmtDate, mintChip, rightsRow, verifChip, navTo } from '../ui';
+import { compatChip as compatChipEl, gallery } from '../lib/compat-ui';
 import type { Asset, LicenseTier, PurchaseState, Split } from '../types';
 
 /** dec: step indicator order mirrors runPurchase's state machine. */
@@ -47,12 +47,7 @@ function accBlock(title: string, open: boolean, body: HTMLElement, badge?: HTMLE
   return el;
 }
 
-const compatChip = (asset: Asset): HTMLElement => {
-  const st = asset.verification.compat?.status;
-  if (st === 'verified') return h('span', { class: 'chip chip-ok' }, 'Compatibility verified');
-  if (st === 'needs-review') return h('span', { class: 'chip chip-warn' }, 'Compatibility needs review');
-  return h('span', { class: 'chip chip-off' }, 'Compatibility pending');
-};
+const compatChip = (asset: Asset): HTMLElement => compatChipEl(asset.verification.compat);
 
 /** dec: four collapsible blocks mirror the docx layout: overview, spec, rights, chain record. */
 function detailBlocks(asset: Asset, creatorName: string): HTMLElement[] {
@@ -208,17 +203,6 @@ function purchasePanel(asset: Asset, tier: LicenseTier): HTMLElement {
   );
 }
 
-/** dec: per-tier rights chips for the tier card. */
-function rightsRow(rights: LicenseTier['rights']): HTMLElement {
-  const cell = (label: string, on: boolean) =>
-    h('span', { class: `right ${on ? 'yes' : 'no'}` }, label);
-  return h('div', { class: 'rights' },
-    cell('Commercial', rights.commercial),
-    cell('Modify', rights.modification),
-    cell('Game integration', rights.gameIntegration),
-    cell('Resale', rights.resale),
-  );
-}
 
 function tierCard(asset: Asset, tier: LicenseTier): HTMLElement {
   const s = getState();
@@ -270,9 +254,7 @@ export function renderAsset(id: string): HTMLElement {
   const right = h('div', { class: 'flow' },
     h('div', { class: 'card' },
       h('h3', {}, 'Mint status'),
-      minted
-        ? h('p', { class: 'sm' }, 'Token ', h('code', {}, asset.tokenId!), ' · tx ', h('code', {}, asset.mintTx ?? '—'))
-        : h('p', { class: 'faint sm' }, 'not minted'),
+      mintChip(asset),
     ),
     h('h2', {}, 'License tiers'),
     purchaseActive

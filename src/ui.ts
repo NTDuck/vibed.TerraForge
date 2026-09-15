@@ -7,7 +7,7 @@ export function notify(kind: 'ok' | 'warn' | 'err', msg: string): void {
   setTimeout(() => commit((s) => ({ ...s, toasts: s.toasts.filter((t) => t.msg !== msg || t.kind !== kind) })), 4200);
 }
 
-import type { VerificationStatus } from './types';
+import type { Asset, LicenseRights, VerificationStatus } from './types';
 
 /** dec: hyperscript renderer — typed DOM builder without a framework (ponytail). */
 export function h(tag: string, attrs?: Record<string, unknown> | null, ...kids: unknown[]): HTMLElement {
@@ -75,3 +75,30 @@ export const ROLES = [
   { id: 'u-chi', label: 'Chị Phạm — reviewer', hint: 'Cultural review queue' },
   { id: 'u-minh', label: 'Minh Vũ — buyer', hint: 'Buy licenses from other players on the resale market' },
 ] as const;
+
+/** dec: mint state chip — chain mark when minted, faint dash when not. */
+export const mintChip = (asset: Asset): HTMLElement =>
+  asset.tokenId
+    ? h('span', { class: 'chip chip-chain' }, `Minted · ${asset.tokenId}`)
+    : h('span', { class: 'chip chip-off' }, 'Not minted');
+
+const RIGHTS_LABEL: Array<[keyof LicenseRights, string]> = [
+  ['commercial', 'Commercial'],
+  ['modification', 'Modify'],
+  ['gameIntegration', 'Game use'],
+  ['resale', 'Resale'],
+];
+
+/** dec: rights chip row — one yes/no chip per license right. */
+export const rightsRow = (rights: LicenseRights): HTMLElement =>
+  h('div', { class: 'rights' },
+    ...RIGHTS_LABEL.map(([key, label]) =>
+      h('span', { class: `right ${rights[key] ? 'yes' : 'no'}` }, label)));
+
+/** dec: dense ledger table. Row elements become tr cells directly, or pass a
+ * prebuilt tr when the row needs its own class (now / reverted tinting). */
+export const ledgerTable = (headers: string[], rows: Array<HTMLElement | HTMLTableRowElement>): HTMLElement =>
+  h('table', { class: 'ledger' },
+    h('thead', {}, h('tr', {}, headers.map((t) => h('th', {}, t)))),
+    h('tbody', {}, rows.map((r) => (r instanceof HTMLTableRowElement ? r : h('tr', {}, r)))),
+  );

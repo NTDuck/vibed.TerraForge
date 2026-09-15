@@ -1,4 +1,4 @@
-import { h, fmt, fmtDate, onchainChip, notify, ROLES } from '../ui';
+import { h, fmt, fmtDate, ledgerTable, onchainChip, notify, ROLES } from '../ui';
 import { commit, getState } from '../app';
 import { login, logout, closeOverlays } from '../store';
 import { glyphFor } from '../lib/glyph';
@@ -80,14 +80,12 @@ export function renderWalletOverlay(): HTMLElement {
   return backdrop(s.session ? identityCard(s) : connectCard());
 }
 
-/** dec: 0x… hashes and contract calls are clickable — clicking flashes the row
+/** dec: 0x… hashes and contract calls are clickable — clicking tints the row
  * for 2s (we are already inside the ledger, nothing else to open). */
 const flashRow = (row: HTMLElement): void => {
-  row.classList.add('flash');
   row.style.background = 'color-mix(in oklab, var(--accent) 16%, transparent)';
   row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   setTimeout(() => {
-    row.classList.remove('flash');
     row.style.background = '';
   }, 2000);
 };
@@ -133,15 +131,10 @@ export function renderLedgerOverlay(): HTMLElement {
     return tr;
   };
 
-  const table = h('table', { class: 'ledger' },
-    h('thead', {}, h('tr', {},
-      h('th', {}, 'Time'),
-      h('th', {}, 'Kind'),
-      h('th', {}, 'Label'),
-      h('th', {}, 'Call'),
-      h('th', {}, 'Chain'),
-      h('th', {}, 'Status'))),
-    h('tbody', {}, ...s.txs.map(row)));
+  const table = ledgerTable(
+    ['Time', 'Kind', 'Label', 'Call', 'Chain', 'Status'],
+    s.txs.map((t) => row(t)),
+  );
 
   return backdrop(h('div', { class: 'panel wide' },
     h('div', { class: 'row spread' },

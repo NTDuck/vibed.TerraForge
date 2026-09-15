@@ -1,0 +1,92 @@
+# TerraForge — mise tasks. mise handles non-docker deps only; docker ships the container runtime itself.
+# Quick start: mise run start
+# Public demo: mise run tunnel --ddnstok YOUR_TOKEN
+
+[tools]
+bun = "1.3.13"
+python = "3.12"
+"npm:playwright" = "1.58.0"
+
+[env]
+PORT = "5173"
+TF_BASE = "http://localhost:5173"
+
+# ---- tasks ----
+
+[tasks.setup]
+description = "Install project dependencies (bun) + python venv for e2e"
+run = """
+bun install
+[ -d .venv-test ] || python3 -m venv .venv-test
+.venv-test/bin/pip install -q playwright
+.venv-test/bin/playwright install chromium --with-deps || true
+"""
+
+[tasks.build]
+description = "Build bundle + fonts"
+run = "bun run build"
+
+[tasks.dev]
+description = "Dev server on :5173"
+run = "bun serve.ts"
+
+[tasks.test]
+description = "Unit tests"
+run = "bun test"
+
+[tasks.check]
+description = "Typecheck + unit tests + build + STE lint"
+run = """
+bun run check && bun test && bun run build && bash tools/ste-lint.sh
+"""
+
+[tasks.e2e]
+description = "Playwright journey suite (needs dev server or docker)"
+run = ".venv-test/bin/python tests/e2e_smoke.py"
+
+[tasks.start]
+description = "Build, start docker on :8080, open the web app"
+run = """
+docker build -t terraforge .
+docker rm -f terraforge 2>/dev/null || true
+docker run -d --name terraforge -p 8080:80 terraforge
+echo "TerraForge → http://localhost:8080"
+(xdg-open http://localhost:8080 2>/dev/null || open http://localhost:8080 2>/dev/null || true)
+"""
+
+[tasks.tunnel]
+description = "Serve publicly. mise run tunnel --ddnstok TOKEN → ntduckk-terraforge.duckdns.org"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+DDNSTOK=""
+prev=""
+for a in "$@"; do
+  case "$prev" in
+    --ddnstok) DDNSTOK="$a" ;;
+  esac
+  prev="$a"
+done
+[ -n "$DDNSTOK" ] || { echo "usage: mise run tunnel --ddnstok TOKEN" >&2; exit 1; }
+
+# app must be up
+curl -sf -o /dev/null http://localhost:8080 || mise run start
+
+CF="$HOME/.local/bin/cloudflared"
+if command -v cloudflared >/dev/null 2>&1; then CF="$(command -v cloudflared)"
+elif [ -x "$CF" ]; then :; else
+  NG="$HOME/.local/bin/ngrok"
+  if command -v ngrok >/dev/null 2>&1; then NG="$(command -v ngrok)"; fi
+  if [ -x "$NG" ]; then
+    echo "cloudflared not found — falling back to ngrok (random URL)."
+    exec "$NG" http 8080
+  fi
+  echo "No tunnel binary found. Put cloudflared at ~/.local/bin/cloudflared (or ngrok on PATH)." >&2
+  exit 1
+fi
+
+exec "$CF" tunnel --url http://localhost:8080 \
+  --hostname ntduckk-terraforge.duckdns.org \
+  --no-autoupdate run \
+  --token "$DDNSTOK"
+"""

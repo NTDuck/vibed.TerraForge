@@ -2,17 +2,10 @@ import { getState } from '../app';
 import { gallery } from '../lib/compat-ui';
 import { h, fmt, verifChip, navTo } from '../ui';
 import type { Asset } from '../types';
-/** dec: filter state is local to the screen — the store stays pure domain state. */
-let kindFilter = 'all';
 let query = '';
 
-const cheapestTier = (a: Asset): number =>
-  a.tiers.length ? Math.min(...a.tiers.map((t) => t.priceVnd)) : 0;
-
-/** dec: the marketplace trades environment kits only (feedback #1) — single filter choice. */
-const ASSET_KINDS: Array<[string, string]> = [
-  ['environment', 'Environment kits'],
-];
+/** dec: card price = cheapest tier, guarded by the tiers.length check at the call site. */
+const cheapestTier = (a: Asset): number => Math.min(...a.tiers.map((t) => t.priceVnd));
 
 function assetCard(a: Asset): HTMLElement {
   const creator = getState().users[a.creatorId];
@@ -55,7 +48,6 @@ function renderGrid(): HTMLElement {
   const listed = s.assets.filter(
     (a) =>
       a.listed &&
-      (kindFilter === 'all' || a.kind === kindFilter) &&
       (!q || a.name.toLowerCase().includes(q) || a.blurb.toLowerCase().includes(q)),
   );
   if (!listed.length) {
@@ -66,18 +58,6 @@ function renderGrid(): HTMLElement {
 
 export function renderMarket(): HTMLElement {
   const gridHost = h('div', {}, renderGrid());
-
-  const kindSel = h(
-    'select',
-    {
-      onchange: (e: Event) => {
-        kindFilter = (e.target as HTMLSelectElement).value;
-        gridHost.replaceChildren(renderGrid());
-      },
-    },
-    h('option', { value: 'all' }, 'All kits'),
-    ASSET_KINDS.map(([v, label]) => h('option', { value: v, selected: kindFilter === v }, label)),
-  );
 
   const search = h('input', {
     type: 'search',
@@ -97,9 +77,7 @@ export function renderMarket(): HTMLElement {
       h('span', { class: 'chip' }, 'VND fiat'),
       h('span', { class: 'chip chip-ok' }, 'Dual verification (AI + compat)'),
     ),
-    // dec: kind left, search right. Search gets a floor width so the row never collapses.
     h('div', { class: 'row spread', style: 'margin-bottom: var(--space-4)' },
-      h('div', { class: 'field' }, h('label', {}, 'Kind'), kindSel),
       h('div', { class: 'field', style: 'min-width: 260px; flex: 0 1 340px' }, h('label', {}, 'Search'), search),
     ),
     gridHost,

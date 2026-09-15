@@ -1,13 +1,12 @@
 import { h } from '../ui';
+import type { AssetKind, CompatCriterion, CompatRun } from '../types';
 import { glyphFor } from './glyph';
-import type { AssetKind, CompatCriterion } from '../types';
-
 /** dec: DOM helpers for the compatibility layer. Screens compose these with h(). */
 
-const ICO: Record<'pass' | 'fail' | 'pending', string> = { pass: '✓', fail: '✕', pending: '…' };
+const ICO: Record<'pass' | 'fail', string> = { pass: '✓', fail: '✕' };
 
 /** One criterion row. state picks the .crit.<state> class and the glyph. */
-export function compatRow(c: CompatCriterion, state: 'pass' | 'fail' | 'pending'): HTMLElement {
+export function compatRow(c: CompatCriterion, state: 'pass' | 'fail'): HTMLElement {
   return h('div', { class: `crit ${state}` },
     h('span', { class: 'ico', 'aria-hidden': 'true' }, ICO[state]),
     h('span', { class: 'crit-name' }, c.name),
@@ -60,3 +59,25 @@ export function gallery(
 
   return h('div', { class: 'gal' }, main, thumbs.length ? h('div', { class: 'gal-thumbs' }, thumbs) : null, nav);
 }
+
+/** dec: per-platform findings for a finished run. Null until results exist. */
+export const compatFindings = (run: CompatRun | undefined): HTMLElement | null => {
+  if (!run || run.status === 'pending' || run.status === 'running') return null;
+  const rows: unknown[] = [];
+  for (const p of run.platforms) {
+    rows.push(h('h4', { style: 'margin-bottom: var(--space-1)' }, p));
+    rows.push(...(run.results[p] ?? []).map((c) => compatRow(c, c.pass ? 'pass' : 'fail')));
+  }
+  const allPass = run.platforms.every((p) => (run.results[p] ?? []).every((c) => c.pass));
+  rows.push(h('div', { class: 'row' }, allPass
+    ? h('span', { class: 'chip chip-ok' }, 'Compatibility Verified')
+    : h('span', { class: 'chip chip-warn' }, 'Needs Review - routed to human reviewer')));
+  return h('div', { class: 'flow' }, ...rows);
+};
+
+/** dec: one-line run status chip for badges and headers. */
+export const compatChip = (run: CompatRun | undefined): HTMLElement => {
+  if (run?.status === 'verified') return h('span', { class: 'chip chip-ok' }, 'Compatibility verified');
+  if (run?.status === 'needs-review') return h('span', { class: 'chip chip-warn' }, 'Compatibility needs review');
+  return h('span', { class: 'chip chip-off' }, 'Compatibility pending');
+};

@@ -1,12 +1,12 @@
 import { commit, getState } from '../app';
 import { mint, resolveVerification, startCompat, finishCompat, submitAsset } from '../store';
 import { CONFIG } from '../config';
-import { compatRow } from '../lib/compat-ui';
-import { h, fmtDate, navTo, notify, verifChip, ROLES } from '../ui';
+import { compatChip, compatFindings } from '../lib/compat-ui';
+import { h, fmtDate, mintChip, navTo, notify, verifChip, ROLES } from '../ui';
 import { glyphFor } from '../lib/glyph';
 import type { Asset, AssetKind } from '../types';
 
-const KINDS: AssetKind[] = ['character', 'skin', 'accessory', 'artwork', 'audio', 'environment'];
+const KINDS: AssetKind[] = ['environment'];
 const MODELS = ['SenDiffusion XL', 'SenDiffusion Sky', 'SonicBloom v2', 'VectorMuse 3'];
 
 /** dec: live "22 %" readout — input listener only, no commit/re-render. */
@@ -36,6 +36,9 @@ function verificationBands(): HTMLElement {
     band(`Traceability < ${traceMin}%`, 'Source audit. Provenance is re-checked before any verdict stands.'),
   );
 }
+/** dec: label + control pair — the form's only repeated shape. */
+const field = (label: string, el: HTMLElement): HTMLElement =>
+  h('div', { class: 'field' }, h('label', null, label), el);
 
 function uploadForm(): HTMLElement {
   const name = h('input', { type: 'text', placeholder: 'Dragon of Hạ Long Bay' }) as HTMLInputElement;
@@ -117,26 +120,25 @@ function uploadForm(): HTMLElement {
     'div',
     { class: 'card' },
     h('h2', null, 'Submit an asset'),
-    h('div', { class: 'field' }, h('label', null, 'Name'), name),
-    h('div', { class: 'field' }, h('label', null, 'Blurb'), blurb),
-    h('div', { class: 'field' }, h('label', null, 'Kind'), kind),
-    h('div', { class: 'field' }, h('label', null, 'Generative model'), model),
-    h('div', { class: 'field' }, h('label', null, 'AI similarity vs registered works (lower is better)'), h('div', { class: 'range' }, sim, simVal)),
-    h('div', { class: 'field' }, h('label', null, 'Source traceability (higher is better)'), h('div', { class: 'range' }, trace, traceVal)),
+    field('Name', name),
+    field('Blurb', blurb),
+    field('Kind', kind),
+    field('Generative model', model),
+    field('AI similarity vs registered works (lower is better)', h('div', { class: 'range' }, sim, simVal)),
+    field('Source traceability (higher is better)', h('div', { class: 'range' }, trace, traceVal)),
     h('p', { class: 'faint sm' }, 'Verdict comes from the same assess() bands shown below.'),
     h('h3', null, 'How verification works'),
     verificationBands(),
-    h('div', { class: 'field' }, h('label', null, 'Display image URL'), imgUrl),
-    h('div', { class: 'field' }, h('label', null, 'Gallery URLs (one per line)'), galleryUrls),
-    h('div', { class: 'field' }, h('label', null, 'Target platforms'), platChecks.map((x) => h('label', { class: 'row', style: 'gap: var(--space-2); align-items: center' }, x.box, x.p))),
+    field('Display image URL', imgUrl),
+    field('Target platforms', h('div', null, platChecks.map((x) => h('label', { class: 'row', style: 'gap: var(--space-2); align-items: center' }, x.box, x.p)))),
     h('fieldset',
       null,
       h('legend', null, 'Technical specification'),
-      h('div', { class: 'field' }, h('label', null, 'File format'), fmt),
-      h('div', { class: 'field' }, h('label', null, 'Polygon count'), tris),
-      h('div', { class: 'field' }, h('label', null, 'Texture'), tex),
-      h('div', { class: 'field' }, h('label', null, 'Animations'), anims),
-      h('div', { class: 'field' }, h('label', null, 'Download size (MB)'), sizeMb),
+      field('File format', fmt),
+      field('Polygon count', tris),
+      field('Texture', tex),
+      field('Animations', anims),
+      field('Download size (MB)', sizeMb),
     ),
     h('div', { class: 'field', style: 'margin-top: var(--space-4); margin-bottom: 0' }, submit),
   );
@@ -149,8 +151,7 @@ function compatCard(a: Asset): HTMLElement {
   const run = a.verification.compat!;
   const kids: unknown[] = [
     h('h3', null, 'Compatibility passport'),
-    h('p', { class: 'sm muted', style: 'margin:0' }, a.name),
-    h('div', { class: 'row' }, ...run.platforms.map((p) => h('span', { class: 'chip' }, p))),
+    h('div', { class: 'row' }, compatChip(run), ...run.platforms.map((p) => h('span', { class: 'chip' }, p))),
   ];
   if (run.status === 'pending') {
     kids.push(
@@ -168,16 +169,7 @@ function compatCard(a: Asset): HTMLElement {
   } else if (run.status === 'running') {
     kids.push(h('p', { class: 'sm muted' }, 'Engine checks are running…'));
   } else {
-    for (const p of run.platforms) {
-      kids.push(h('h4', { style: 'margin-bottom: var(--space-1)' }, p));
-      kids.push(...(run.results[p] ?? []).map((c) => compatRow(c, c.pass ? 'pass' : 'fail')));
-    }
-    const allPass = run.platforms.every((p) => (run.results[p] ?? []).every((c) => c.pass));
-    kids.push(
-      h('div', { class: 'row' }, allPass
-        ? h('span', { class: 'chip chip-ok' }, 'Compatibility Verified')
-        : h('span', { class: 'chip chip-warn' }, 'Needs Review - routed to human reviewer')),
-    );
+    kids.push(compatFindings(run)!);
   }
   return h('div', { class: 'card' }, ...kids);
 }
@@ -188,11 +180,7 @@ function uploadRow(a: Asset): HTMLElement {
   const v = a.verification;
   const chips = h('div', { class: 'row' }, verifChip(v.status));
   if (v.status === 'needs-review') chips.append(h('span', { class: 'chip chip-warn' }, 'In review'));
-  chips.append(
-    a.tokenId
-      ? h('span', { class: 'chip chip-chain' }, `minted ${a.tokenId}`)
-      : h('span', { class: 'chip chip-off' }, 'not minted'),
-  );
+  chips.append(mintChip(a));
 
   const card = h(
     'div',

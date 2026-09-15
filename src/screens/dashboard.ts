@@ -2,21 +2,8 @@ import { commit, getState } from '../app';
 import { recordUsage, transferLicense } from '../store';
 import { RESELLER } from '../seed';
 import { checkRights, USAGES, USAGE_LABEL, type Usage } from '../lib/license';
-import { h, fmt, fmtDate, verifChip, onchainChip, notify, navTo } from '../ui';
-import type { LicenseRights, LicenseNft, Sale, State, Tx } from '../types';
-
-/** dec: rights matrix labels — short chips, key order fixed for stable UI. */
-const RIGHTS_LABEL: Array<[keyof LicenseRights, string]> = [
-  ['commercial', 'Commercial'],
-  ['modification', 'Modify'],
-  ['gameIntegration', 'Game use'],
-  ['resale', 'Resale'],
-];
-
-const rightsMatrix = (rights: LicenseRights): HTMLElement =>
-  h('div', { class: 'rights' },
-    ...RIGHTS_LABEL.map(([key, label]) =>
-      h('span', { class: `right ${rights[key] ? 'yes' : 'no'}` }, label)));
+import { h, fmt, fmtDate, ledgerTable, mintChip, rightsRow, verifChip, onchainChip, notify, navTo } from '../ui';
+import type { LicenseNft, Sale, State, Tx } from '../types';
 
 /** dec: verdict of the last on-chain permit() call for this license. Derived
  * from ledger txs so the chip survives re-render without extra ui state. */
@@ -121,7 +108,7 @@ const licenseCard = (s: State, lic: LicenseNft): HTMLElement => {
         h('button', { class: 'btn ghost sm', onclick: checkPermit }, 'Check permit'),
         usageVerdict(s.txs, lic.id))));
 
-  return h('div', { class: 'card' }, head, serialLine, rightsMatrix(tier.rights), resale, usageBox);
+  return h('div', { class: 'card' }, head, serialLine, rightsRow(tier.rights), resale, usageBox);
 };
 
 /** dec: creator royalties ledger — kind mirrors the split that paid me:
@@ -145,16 +132,17 @@ function royaltiesLedger(s: State): HTMLElement {
   if (rows.length === 0) return empty('No sales yet — list an asset on the Market and royalties will land here.');
   const lifetime = rows.reduce((sum, r) => sum + r.cut, 0);
 
-  return h('table', { class: 'ledger' },
-    h('thead', {}, h('tr', {},
-      h('th', {}, 'Asset'), h('th', {}, 'Kind'), h('th', {}, 'Buyer'),
-      h('th', { class: 'amount' }, 'My cut'), h('th', {}, 'When'))),
-    h('tbody', {}, ...rows.map((r) => saleRow(s, r.sale, r.cut))),
-    // dec: totals derive from the rows above — no hardcoded figures.
-    h('tfoot', {}, h('tr', {},
-      h('td', { colspan: 3 }, h('b', {}, 'Lifetime earnings')),
-      h('td', { class: 'amount' }, h('b', {}, fmt(lifetime))),
-      h('td', {}))));
+  return ledgerTable(
+    ['Asset', 'Kind', 'Buyer', 'My cut', 'When'],
+    [
+      ...rows.map((r) => saleRow(s, r.sale, r.cut)),
+      // dec: totals derive from the rows above — no hardcoded figures.
+      h('tr', {},
+        h('td', { colspan: 3 }, h('b', {}, 'Lifetime earnings')),
+        h('td', { class: 'amount' }, h('b', {}, fmt(lifetime))),
+        h('td', {})),
+    ],
+  );
 }
 
 function myAssetsCard(s: State): HTMLElement {
@@ -166,9 +154,7 @@ function myAssetsCard(s: State): HTMLElement {
       h('div', { class: 'row' },
         verifChip(a.verification.status),
         h('span', { class: `chip ${a.listed ? 'chip-ok' : 'chip-off'}` }, a.listed ? 'Listed' : 'Unlisted'),
-        a.tokenId
-          ? h('span', { class: 'chip chip-chain' }, `Minted · ${a.tokenId}`)
-          : h('span', { class: 'chip chip-off' }, 'Not minted')));
+        mintChip(a)));
   return h('div', { class: 'card' }, ...mine.map(row));
 }
 
@@ -230,11 +216,10 @@ function recentActivity(s: State): HTMLElement {
       h('td', {},
         h('span', { class: `chip ${t.status === 'reverted' ? 'chip-err' : 'chip-ok'}` }, t.status)));
   return h('div', {},
-    h('h2', {}, 'SERSE Audit Ledger — recent activity'),
-    h('table', { class: 'ledger' },
-      h('thead', {}, h('tr', {},
-        h('th', {}, 'Time'), h('th', {}, 'Call'), h('th', {}, 'Ledger'), h('th', {}, 'Status'))),
-      h('tbody', {}, ...s.txs.slice(0, 6).map((t, i) => row(t, i === 0)))));
+    ledgerTable(
+      ['Time', 'Call', 'Ledger', 'Status'],
+      s.txs.slice(0, 6).map((t, i) => row(t, i === 0))),
+  );
 }
 
 export function renderDashboard(): HTMLElement {

@@ -156,8 +156,43 @@ export function renderStrategy(): HTMLElement {
           h('span', { class: 'sm muted grow' }, body),
         ),
     ),
+    // 6 — References: numbered chips, full citation in a themed tooltip on hover/focus.
+    h('h2', {}, 'References'),
+    h(
+      'div',
+      { class: 'row refchips' },
+      [
+        'Béguelin, C., Boneh, D. and Nelson, E. (2026), \'Formal Verification and Security Weaknesses in Digital Media Provenance Standards (C2PA)\', arXiv preprint arXiv:2604.24890.',
+        'C2PA (2024), Content Credentials: C2PA Technical Specification, Coalition for Content Provenance and Authenticity.',
+        'Caldarelli, G. (2020), \'Understanding the Blockchain Oracle Problem: A Systematic Review\', Future Internet, 12(11), p. 202.',
+        'Collomosse, J., Steer, C. and Cooper, M. (2024), \'EKILA: Synthetic Media Attribution and Rights Management using C2PA and NFTs\', IEEE Computer Graphics and Applications / arXiv preprint arXiv:2304.04639.',
+        'Lee, S., Kim, H. and Park, J. (2026), \'A Study on Broker-Assisted Blockchain Trust Chains for Provenance and Integrity Verification of Generative Media Using Watermarking, Semantic Fingerprinting, and C2PA\', Applied Sciences, 16(7), p. 3391.',
+        'Tan, X., Wang, Y. and Zhang, L. (2026), \'A Blockchain-Backed Framework for Verifiable Provenance Identification of AI-Generated Content\', arXiv preprint arXiv:2602.02412.',
+        'Buolamwini J and Gebru T (2018) \'Gender shades: intersectional accuracy disparities in commercial gender classification\', Proceedings of Machine Learning Research, 81:77–91.',
+        'Crawford K (2021) Atlas of AI: power, politics, and the planetary costs of artificial intelligence, Yale University Press, New Haven.',
+        'Eskandari S, Clark J, Barrera D and Stobert E (2018) \'A first look at the usability of bitcoin key management\', NDSS Workshop on Usable Security (USEC), 18–21 February, Internet Society, Reston.',
+        'Fairfield J (2021) \'Tokenized: the law of non-fungible tokens and unique digital property\', Indiana Law Journal, 97(4):1261–1313.',
+        'Guadamuz A (2021) \'What do you actually own when you buy an NFT?\', TechnoLlama, accessed 15 September 2026, https://www.technollama.co.uk/what-do-you-actually-own-when-you-buy-an-nft.',
+        'Henderson P, Xue C, Zhao V, Liang P and Jurafsky D (2023) Foundation models and fair use, arXiv, doi:10.48550/arXiv.2303.15715.',
+        'Luu L, Chu DH, Olickel H, Saxena P and Hobor A (2016) \'Making smart contracts smarter\', Proceedings of the 2016 ACM SIGSAC Conference on Computer and Communications Security, ACM, New York, pp. 254–269, doi:10.1145/2976749.2978309.',
+        'Murray A (2023) Information technology law: the law and society, 5th edn, Oxford University Press, Oxford.',
+        'National Assembly of Vietnam (2022) Law on Intellectual Property (Law No. 07/2022/QH15), National Assembly of Vietnam, Hanoi.',
+        'Saltini R, Zhang F, Hyland-Wood D and Brainard J (2023) \'Decentralized governance and upgradeability mechanisms in smart contracts\', IEEE Transactions on Network and Service Management, 20(3):3012–3025, doi:10.1109/TNSM.2023.3289104.',
+      ].map((ref, i) => {
+        const chip = h('button', { class: 'chip refchip', type: 'button', 'aria-label': 'Citation ' + (i + 1) }, `[${i + 1}]`);
+        const tip = h('span', { class: 'reftip', role: 'tooltip' }, ref);
+        const wrap = h('span', { class: 'refwrap' }, chip, tip);
+        const show = (): void => wrap.classList.add('on');
+        const hide = (): void => wrap.classList.remove('on');
+        chip.addEventListener('mouseenter', show);
+        chip.addEventListener('mouseleave', hide);
+        chip.addEventListener('focus', show);
+        chip.addEventListener('blur', hide);
+        return wrap;
+      }),
+    ),
 
-    // 6 — Footer note
+    // 7 — Footer note
     h('p', { class: 'sm faint' }, 'TerraForge is a course mockup (INTE2581): no real blockchain, payments or AI inference — all state lives in the browser. See the project README for the whiteboard sections this screen summarises.'),
   );
 }
