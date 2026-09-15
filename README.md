@@ -25,21 +25,17 @@ INTE2581 S2 2026 · Assessment Task 3. This web mockup shows how a Vietnamese ma
 | **Strategy** — architecture, limitations, Y0→Yx roadmap (long-document rhythm) | ![Strategy](docs/img/09-strategy.png) |
 | ![Mobile](docs/img/10-mobile.png) | **Responsive** — no horizontal scroll at 375 px |
 
-## Run with Docker (recommended)
+## Run with mise (recommended)
 
 ```bash
-docker build -t senchain .
-docker run -p 8080:80 senchain
+mise run start                              # build + docker + open http://localhost:8080
+ mise run tunnel --ddnstok YOUR_TOKEN        # serve https://ntduckk-terraforge.duckdns.org
+ mise run setup                              # install bun/python deps + e2e browser (non-docker deps)
+ mise run check                              # typecheck + tests + build + STE lint
+ mise run e2e                                # 83-check journey suite (server must be up)
 ```
 
-Open http://localhost:8080. Sign in with the top-right button. No other step is necessary.
-
-## Run without Docker (development)
-
-```bash
-bun install
-bun run dev      # build + serve → http://localhost:5173
-```
+The tunnel needs `cloudflared` at `~/.local/bin/cloudflared` (falls back to `ngrok` on PATH). `mise run start` needs Docker on PATH.
 
 ## What the prototype demonstrates (assignment → screen)
 
