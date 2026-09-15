@@ -9,13 +9,9 @@ let query = '';
 const cheapestTier = (a: Asset): number =>
   a.tiers.length ? Math.min(...a.tiers.map((t) => t.priceVnd)) : 0;
 
+/** dec: the marketplace trades environment kits only (feedback #1) — single filter choice. */
 const ASSET_KINDS: Array<[string, string]> = [
-  ['character', 'Characters'],
-  ['skin', 'Skins'],
-  ['accessory', 'Accessories'],
-  ['artwork', 'Artwork'],
-  ['audio', 'Audio'],
-  ['environment', 'Environments'],
+  ['environment', 'Environment kits'],
 ];
 
 function assetCard(a: Asset): HTMLElement {
@@ -79,7 +75,7 @@ export function renderMarket(): HTMLElement {
         gridHost.replaceChildren(renderGrid());
       },
     },
-    h('option', { value: 'all' }, 'All kinds'),
+    h('option', { value: 'all' }, 'All kits'),
     ASSET_KINDS.map(([v, label]) => h('option', { value: v, selected: kindFilter === v }, label)),
   );
 
