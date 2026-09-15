@@ -165,7 +165,10 @@ export function saveTiers(s: State, assetId: string, tiers: LicenseTier[]): Stat
 export function mint(s: State, assetId: string): { state: State; asset: Asset; tx: Tx } {
   const asset = s.assets.find((a) => a.id === assetId);
   if (!asset) throw new Error('asset not found');
-  if (asset.verification.status !== 'verified' || asset.verification.compat?.status !== 'verified') {
+  if (
+    !(asset.verification.status === 'verified' || asset.verification.status === 'ai-passed') ||
+    asset.verification.compat?.status !== 'verified'
+  ) {
     throw new Error('Mint blocked: both verification layers must pass (AI provenance + compatibility).');
   }
   const minted = s.assets.filter((a) => a.tokenId);

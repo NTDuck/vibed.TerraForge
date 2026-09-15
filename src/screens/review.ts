@@ -39,7 +39,7 @@ function specTable(a: Asset): HTMLElement | null {
 /** dec: compat findings — per-platform criteria when the flagged run needs review. */
 function compatFindings(a: Asset): HTMLElement | null {
   const run = a.verification.compat;
-  if (!run || run.status !== 'needs-review') return null;
+  if (!run || run.status === 'pending' || run.status === 'running') return null;
   const rows: unknown[] = [h('h4', { style: 'margin-bottom: var(--space-1)' }, 'Compatibility findings')];
   for (const p of CONFIG.compatPlatforms.filter((p) => run.platforms.includes(p))) {
     rows.push(h('div', { class: 'sm', style: 'margin-top: var(--space-2)' }, h('strong', null, p)));

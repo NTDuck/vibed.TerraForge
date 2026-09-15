@@ -50,6 +50,11 @@ function uploadForm(): HTMLElement {
   bindRange(trace, traceVal);
   const imgUrl = h('input', { type: 'text', placeholder: 'https://… or leave empty' }) as HTMLInputElement;
   const galleryUrls = h('textarea', { rows: 3, placeholder: 'https://… one per line' }) as HTMLTextAreaElement;
+  const fmt = h('input', { type: 'text', value: 'FBX, GLB' }) as HTMLInputElement;
+  const tris = h('input', { type: 'number', value: '42300', min: '0', step: '100' }) as HTMLInputElement;
+  const tex = h('input', { type: 'text', value: '4K PBR' }) as HTMLInputElement;
+  const anims = h('input', { type: 'number', value: '12', min: '0' }) as HTMLInputElement;
+  const sizeMb = h('input', { type: 'number', value: '18', min: '0', step: '1' }) as HTMLInputElement;
   const platChecks = CONFIG.compatPlatforms.map((p) => ({
     p,
     box: h('input', { type: 'checkbox', checked: true }) as HTMLInputElement,
@@ -71,6 +76,13 @@ function uploadForm(): HTMLElement {
         const images = display ? { display, gallery: [display, ...lines] } : undefined;
         const platforms = platChecks.filter((x) => x.box.checked).map((x) => x.p);
         let asset: Asset | undefined;
+        const spec = {
+          format: fmt.value,
+          tris: Number(tris.value) || 0,
+          texture: tex.value,
+          animations: Number(anims.value) || 0,
+          sizeMb: Number(sizeMb.value) || 0,
+        };
         commit((s) => {
           const r = submitAsset(s, {
             name: name.value.trim(),
@@ -79,6 +91,7 @@ function uploadForm(): HTMLElement {
             model: model.value,
             similarity: Number(sim.value),
             traceability: Number(trace.value),
+            spec,
             platforms,
           });
           asset = r.asset;
@@ -116,6 +129,15 @@ function uploadForm(): HTMLElement {
     h('div', { class: 'field' }, h('label', null, 'Display image URL'), imgUrl),
     h('div', { class: 'field' }, h('label', null, 'Gallery URLs (one per line)'), galleryUrls),
     h('div', { class: 'field' }, h('label', null, 'Target platforms'), platChecks.map((x) => h('label', { class: 'row', style: 'gap: var(--space-2); align-items: center' }, x.box, x.p))),
+    h('fieldset',
+      null,
+      h('legend', null, 'Technical specification'),
+      h('div', { class: 'field' }, h('label', null, 'File format'), fmt),
+      h('div', { class: 'field' }, h('label', null, 'Polygon count'), tris),
+      h('div', { class: 'field' }, h('label', null, 'Texture'), tex),
+      h('div', { class: 'field' }, h('label', null, 'Animations'), anims),
+      h('div', { class: 'field' }, h('label', null, 'Download size (MB)'), sizeMb),
+    ),
     h('div', { class: 'field', style: 'margin-top: var(--space-4); margin-bottom: 0' }, submit),
   );
 }
@@ -160,7 +182,6 @@ function compatCard(a: Asset): HTMLElement {
   return h('div', { class: 'card' }, ...kids);
 }
 
-
 /** dec: one of my uploads — glyph, name, verdict + mint status chips. Rejected
  * rows surface only the first reason, with a faint "+n more" overflow marker. */
 function uploadRow(a: Asset): HTMLElement {
@@ -184,13 +205,17 @@ function uploadRow(a: Asset): HTMLElement {
       chips,
     ),
   );
+  if (a.images?.display) {
+    card.append(h('img', { class: 'row-img', src: a.images.display, alt: a.name, loading: 'lazy', style: 'width: 100%; height: auto; border-radius: var(--radius, 8px)' }));
+  }
 
-  const gateOpen = v.status === 'verified' && v.compat?.status === 'verified';
-  const gateHint = v.status !== 'verified'
+
+  const gateOpen = (v.status === 'verified' || v.status === 'ai-passed') && v.compat?.status === 'verified';
+  const gateHint = (v.status !== 'verified' && v.status !== 'ai-passed')
     ? 'AI provenance must clear first'
     : 'Both layers must pass before mint';
   const foot = h('div', { class: 'row' });
-  if (v.status === 'verified' && !a.tokenId) {
+  if ((v.status === 'verified' || v.status === 'ai-passed') && !a.tokenId) {
     foot.append(
       h(
         'button',
