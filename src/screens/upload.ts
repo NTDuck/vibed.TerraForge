@@ -188,7 +188,7 @@ function uploadRow(a: Asset): HTMLElement {
   const gateOpen = v.status === 'verified' && v.compat?.status === 'verified';
   const gateHint = v.status !== 'verified'
     ? 'AI provenance must clear first'
-    : 'Both layers must verify before mint';
+    : 'Both layers must pass before mint';
   const foot = h('div', { class: 'row' });
   if (v.status === 'verified' && !a.tokenId) {
     foot.append(
@@ -197,7 +197,7 @@ function uploadRow(a: Asset): HTMLElement {
         {
           class: 'btn accent sm',
           disabled: !gateOpen,
-          title: gateOpen ? undefined : `Mint gate: ${gateHint}. Both layers must verify before mint`,
+          title: gateOpen ? undefined : `Mint gate: ${gateHint}. Both layers must pass before mint`,
           onclick: () => {
             let tokenId = '';
             commit((s) => {

@@ -15,7 +15,9 @@ def main() -> None:
     OUTDIR.mkdir(exist_ok=True)
     for f in FILES:
         lines: list[str] = []
-        for m in re.finditer(r'(?://[ \t]*(.+)|/\*\*?[ \t]*([\s\S]*?)\*/)', pathlib.Path(f).read_text()):
+        src = pathlib.Path(f).read_text()
+        src = re.sub(r'''(['"])(https?:)?//[^\1]*?\1''', "'url'", src)
+        for m in re.finditer(r'(?://[ \t]*(.+)|/\*\*?[ \t]*([\s\S]*?)\*/)', src):
             raw = m.group(1) or m.group(2) or ''
             # block comments: emit each content line separately so list structure survives
             parts = [l.strip().lstrip('*').strip() for l in raw.split('\n')] if m.group(2) else [raw.strip()]

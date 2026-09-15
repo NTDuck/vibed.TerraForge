@@ -51,7 +51,7 @@ const licenseCard = (s: State, lic: LicenseNft): HTMLElement => {
     'aria-label': 'Resale price (VND)',
   }) as HTMLInputElement;
 
-  // dec: transfer target — every user except the owner; treasury excluded.
+  // dec: transfer target — every user except the owner. Treasury excluded.
   // Defaults to Minh Vũ (buyer 2) so the buyer1 → buyer2 story is one click.
   const targets = Object.values(s.users).filter(
     (u) => u.id !== lic.ownerId && u.role !== 'platform');
