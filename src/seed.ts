@@ -198,7 +198,6 @@ export const ASSETS: Asset[] = [
 ];
 
 export const emptyState = (): State => ({
-  rev: 2,
   users: Object.fromEntries(USERS.map((u) => [u.id, { ...u }])),
   assets: ASSETS.map((a) => ({
     ...a,

@@ -1,5 +1,3 @@
-export const REV = 2;
-
 export const CONFIG = {
   storeKey: 'terraforge-mock-v1',
   /** multiplier applied to simulated delays. Tests set 0 */

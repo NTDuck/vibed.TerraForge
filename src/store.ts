@@ -147,20 +147,6 @@ export function setReview(
   return { state: next, asset: { ...asset, review, verification } };
 }
 
-export function listAsset(s: State, assetId: string): State {
-  const assets = s.assets.map((a) => (a.id === assetId ? { ...a, listed: true } : a));
-  return { ...s, assets };
-}
-
-export function savePassport(s: State, assetId: string, passport: Asset['passport']): State {
-  const assets = s.assets.map((a) => (a.id === assetId ? { ...a, passport } : a));
-  return { ...s, assets };
-}
-
-export function saveTiers(s: State, assetId: string, tiers: LicenseTier[]): State {
-  const assets = s.assets.map((a) => (a.id === assetId ? { ...a, tiers } : a));
-  return { ...s, assets };
-}
 
 export function mint(s: State, assetId: string): { state: State; asset: Asset; tx: Tx } {
   const asset = s.assets.find((a) => a.id === assetId);

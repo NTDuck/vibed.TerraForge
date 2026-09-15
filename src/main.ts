@@ -12,7 +12,6 @@ import { renderReview } from './screens/review';
 import { renderStrategy } from './screens/strategy';
 import { renderContracts } from './screens/contracts';
 import { renderWalletOverlay, renderLedgerOverlay } from './screens/overlays';
-import { ROLES } from './ui';
 
 import { setState } from './app';
 
@@ -123,5 +122,3 @@ window.addEventListener('hashchange', () => {
 wireChrome();
 rerenderAll();
 
-// dec: convenience — expose sign-in helper for the wallet overlay (ROLES drives it)
-export { ROLES, login };

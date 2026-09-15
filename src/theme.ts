@@ -48,11 +48,6 @@ function apply(scheme: Base16Scheme): void {
   for (const [k, v] of Object.entries(props)) root.style.setProperty(k, v);
 }
 
-// Active scheme id. Reads the data-theme attribute the runtime sets.
-export function currentTheme(): string {
-  return document.documentElement.getAttribute('data-theme') ?? DEFAULT_THEME;
-}
-
 export function applyTheme(name: string): void {
   const scheme = THEMES[name] ?? THEMES[DEFAULT_THEME];
   const id = THEMES[name] ? name : DEFAULT_THEME;

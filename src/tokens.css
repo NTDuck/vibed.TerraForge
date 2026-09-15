@@ -54,16 +54,12 @@
 
   /* space (4pt) */
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
-  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px;
 
   /* shape + motion */
-  --radius-sm: 4px;
   --radius: 6px;
-  --radius-lg: 8px;
   --dur-fast: 120ms;
   --dur: 180ms;
   --dur-slow: 280ms;
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --ease-in: cubic-bezier(0.55, 0, 0.55, 0.2);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }

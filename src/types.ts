@@ -199,7 +199,6 @@ export interface Toast {
 }
 
 export interface State {
-  rev: number;
   users: Record<string, User>;
   assets: Asset[];
   licenses: LicenseNft[];

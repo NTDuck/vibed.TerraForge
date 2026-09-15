@@ -4,9 +4,6 @@ import { h, fmt, verifChip, navTo } from '../ui';
 import type { Asset } from '../types';
 let query = '';
 
-/** dec: card price = cheapest tier, guarded by the tiers.length check at the call site. */
-const cheapestTier = (a: Asset): number => Math.min(...a.tiers.map((t) => t.priceVnd));
-
 function assetCard(a: Asset): HTMLElement {
   const creator = getState().users[a.creatorId];
   return h(
@@ -28,7 +25,7 @@ function assetCard(a: Asset): HTMLElement {
     // dec: price+creator lead the card. Meta chips sit below as secondary info.
     h('div', { class: 'row spread', style: 'margin-top: var(--space-2)' },
       a.tiers.length
-        ? h('strong', { class: 'mono', style: 'color: var(--accent)' }, fmt(cheapestTier(a)))
+        ? h('strong', { class: 'mono', style: 'color: var(--accent)' }, fmt(Math.min(...a.tiers.map((t) => t.priceVnd))))
         : h('span', { class: 'faint mono' }, 'no tiers'),
       h('span', { class: 'sm muted' }, creator?.name ?? a.creatorId),
     ),

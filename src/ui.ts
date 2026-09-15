@@ -80,7 +80,7 @@ export const ROLES = [
 export const mintChip = (asset: Asset): HTMLElement =>
   asset.tokenId
     ? h('span', { class: 'chip chip-chain' }, `Minted · ${asset.tokenId}`)
-    : h('span', { class: 'chip chip-off' }, 'Not minted');
+    : h('span', { class: 'chip chip-off' }, 'not minted');
 
 const RIGHTS_LABEL: Array<[keyof LicenseRights, string]> = [
   ['commercial', 'Commercial'],

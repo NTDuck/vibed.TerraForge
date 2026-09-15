@@ -8,7 +8,7 @@ export function loadState(): State {
     const raw = localStorage.getItem(CONFIG.storeKey);
     if (!raw) return emptyState();
     const s = JSON.parse(raw) as State;
-    if (typeof s.rev !== 'number' || !Array.isArray(s.assets) || typeof s.users !== 'object' || !s.users) {
+    if (!Array.isArray(s.assets) || typeof s.users !== 'object' || !s.users) {
       return emptyState();
     }
     return s;

@@ -80,8 +80,8 @@ export function renderWalletOverlay(): HTMLElement {
   return backdrop(s.session ? identityCard(s) : connectCard());
 }
 
-/** dec: 0x… hashes and contract calls are clickable — clicking tints the row
- * for 2s (we are already inside the ledger, nothing else to open). */
+/** dec: contract calls are clickable — clicking tints the row for 2s (we are
+ * already inside the ledger, nothing else to open). */
 const flashRow = (row: HTMLElement): void => {
   row.style.background = 'color-mix(in oklab, var(--accent) 16%, transparent)';
   row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -93,12 +93,8 @@ const flashRow = (row: HTMLElement): void => {
 const addrBtn = (label: string, row: HTMLElement): HTMLElement =>
   h('button', { class: 'addr', onclick: () => flashRow(row) }, label);
 
-/** dec: split label on 0x… hashes and render each as an .addr button. */
-const labelCell = (label: string, row: HTMLElement): HTMLElement => {
-  const parts = label.split(/(0x[0-9a-zA-Z.]+)/);
-  return h('td', {}, ...parts.map((p) =>
-    /^0x[0-9a-zA-Z.]+$/.test(p) ? addrBtn(p, row) : p));
-};
+/** dec: labels never carry 0x hashes (verified against store emit sites) — plain cell. */
+const labelCell = (label: string): HTMLElement => h('td', {}, label);
 
 function callCell(tx: Tx, row: HTMLElement): HTMLElement {
   if (!tx.call) return h('td', { class: 'faint' }, '—');
@@ -124,7 +120,7 @@ export function renderLedgerOverlay(): HTMLElement {
       h('td', { class: 'mono muted' }, t.kind));
     // dec: label + call cells need the row ref for click-flash, so append after.
     tr.append(
-      labelCell(t.label, tr),
+      labelCell(t.label),
       callCell(t, tr),
       h('td', {}, onchainChip(t.onChain)),
       h('td', {}, h('span', { class: `chip ${t.status === 'confirmed' ? 'chip-ok' : 'chip-err'}` }, t.status)));

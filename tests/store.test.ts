@@ -92,7 +92,6 @@ describe('seed', () => {
     ]);
     const s = emptyState();
     expect(Object.keys(s.users).length).toBe(5);
-    expect(s.rev).toBe(2);
     for (const a of s.assets) {
       expect(a.verification.status).toBe('verified');
       expect(a.verification.compat?.status).toBe('verified');

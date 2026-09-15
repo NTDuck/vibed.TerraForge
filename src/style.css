@@ -374,17 +374,9 @@ code, .mono { font-family: var(--font-mono); font-size: 0.84em; letter-spacing: 
 .crit.pass .ico { color: var(--ok); }
 .crit.fail { border-color: color-mix(in oklab, var(--err) 40%, transparent); }
 .crit.fail .ico { color: var(--err); }
-.crit.pending { color: var(--ink-faint); }
 
-/* ---------- blocks table: dense key-value blocks (credentials, specs) ---------- */
-.tbl-blocks { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
-.tbl-blocks th, .tbl-blocks td {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--line);
-  text-align: left; vertical-align: top;
-}
-.tbl-blocks th { color: var(--ink-dim); font-weight: 500; font-size: 12px; background: var(--paper-3); }
-.tbl-blocks td { font-family: var(--font-mono); overflow-wrap: anywhere; }
+/* ---------- blocks container: wraps the accordion credential blocks ---------- */
+.tbl-blocks { padding: 0; }
 
 /* ---------- address: mono accent clickable ---------- */
 .addr {
@@ -406,9 +398,6 @@ code, .mono { font-family: var(--font-mono); font-size: 0.84em; letter-spacing: 
   font: 500 var(--text-xs) var(--font-body);
   white-space: nowrap;
 }
-.badge.accent { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
-.badge.ok { color: var(--ok); border-color: color-mix(in oklab, var(--ok) 45%, transparent); }
-.badge.err { color: var(--err); border-color: color-mix(in oklab, var(--err) 45%, transparent); }
 
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
@@ -426,10 +415,6 @@ code, .mono { font-family: var(--font-mono); font-size: 0.84em; letter-spacing: 
   #screen { padding: 0 var(--space-3); }
   h1 { font-size: 1.7rem; }
 }
-
-/* screen sections breathe */
-#screen { padding: var(--space-6) 0 var(--space-7); }
-#screen > .wrap { display: block; }
 
 /* ledger tables inside cards must not overflow their container */
 .card .ledger { table-layout: auto; }

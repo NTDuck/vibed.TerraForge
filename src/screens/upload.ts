@@ -130,6 +130,7 @@ function uploadForm(): HTMLElement {
     h('h3', null, 'How verification works'),
     verificationBands(),
     field('Display image URL', imgUrl),
+    field('Gallery URLs (one per line)', galleryUrls),
     field('Target platforms', h('div', null, platChecks.map((x) => h('label', { class: 'row', style: 'gap: var(--space-2); align-items: center' }, x.box, x.p)))),
     h('fieldset',
       null,

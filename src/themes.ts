@@ -20,7 +20,8 @@ export interface Base16Scheme {
 }
 
 // TerraForge custom dark scheme. Tiffany-blue accent.
-export const TERRAFORGE: Base16Scheme = {
+export const THEMES: Record<string, Base16Scheme> = {
+  'terraforge-tiffany': {
   base00: '#191714',
   base01: '#221f1b',
   base02: '#2c2925',
@@ -37,10 +38,7 @@ export const TERRAFORGE: Base16Scheme = {
   base0D: '#81d8d0',
   base0E: '#7f5caf',
   base0F: '#d47cd6',
-};
-
-export const THEMES: Record<string, Base16Scheme> = {
-  'terraforge-tiffany': TERRAFORGE,
+  },
   '0x96f': { base00: '#262427', base01: '#3b393c', base02: '#514f52', base03: '#676567', base04: '#7c7b7d', base05: '#fcfcfc', base06: '#eae9eb', base07: '#fcfcfc', base08: '#ff7272', base09: '#fc9d6f', base0A: '#ffca58', base0B: '#bcdf59', base0C: '#aee8f4', base0D: '#49cae4', base0E: '#a093e2', base0F: '#ff8787' },
   '3024': { base00: '#090300', base01: '#3a3432', base02: '#4a4543', base03: '#5c5855', base04: '#807d7c', base05: '#a5a2a2', base06: '#d6d5d4', base07: '#f7f7f7', base08: '#db2d20', base09: '#e8bbd0', base0A: '#fded02', base0B: '#01a252', base0C: '#b5e4f4', base0D: '#01a0e4', base0E: '#a16a94', base0F: '#cdab53' },
   'apathy': { base00: '#031a16', base01: '#0b342d', base02: '#184e45', base03: '#2b685e', base04: '#5f9c92', base05: '#81b5ac', base06: '#a7cec8', base07: '#d2e7e4', base08: '#3e9688', base09: '#3e7996', base0A: '#3e4c96', base0B: '#883e96', base0C: '#963e4c', base0D: '#96883e', base0E: '#4c963e', base0F: '#3e965b' },

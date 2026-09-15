@@ -63,15 +63,13 @@ def main() -> None:
         '}',
         '',
         '// TerraForge custom dark scheme. Tiffany-blue accent.',
-        'export const TERRAFORGE: Base16Scheme = {',
+        'export const THEMES: Record<string, Base16Scheme> = {',
+        "  'terraforge-tiffany': {",
     ]
     for k in KEYS:
         lines.append(f"  {k}: '{TERRAFORGE[k]}',")
     lines += [
-        '};',
-        '',
-        'export const THEMES: Record<string, Base16Scheme> = {',
-        "  'terraforge-tiffany': TERRAFORGE,",
+        '  },',
     ]
     for name in sorted(themes):
         fields = ', '.join(f"{k}: '{themes[name][k]}'" for k in KEYS)

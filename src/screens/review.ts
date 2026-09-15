@@ -73,6 +73,7 @@ function reviewCard(asset: Asset, reviewerName: string): HTMLElement {
     h('div', { class: 'faint sm', style: 'margin-top: var(--space-3)' }, 'AI reasons'),
     h('ul', { class: 'sm muted' },
       ...(v.reasons ?? ['No AI reasons recorded.']).map((r) => h('li', null, r))),
+    h('h4', { style: 'margin-bottom: var(--space-1)' }, 'Compatibility findings'),
     compatFindings(asset.verification.compat),
     h('div', { class: 'field' },
       h('label', null, 'Reviewer note'),
