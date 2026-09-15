@@ -83,8 +83,8 @@ export const ASSETS: Asset[] = [
     },
     spec: HUE_SPEC,
     images: {
-      display: 'docs/img/assets/hue-display.webp',
-      gallery: ['docs/img/assets/hue-2.webp', 'docs/img/assets/hue-3.webp'],
+      display: '/img/assets/hue-display.webp',
+      gallery: ['/img/assets/hue-2.webp', '/img/assets/hue-3.webp'],
     },
     credential: {
       id: 'CRED-001',
@@ -154,8 +154,8 @@ export const ASSETS: Asset[] = [
     },
     spec: BATTRANG_SPEC,
     images: {
-      display: 'docs/img/assets/battrang-display.webp',
-      gallery: ['docs/img/assets/battrang-2.webp', 'docs/img/assets/battrang-3.webp'],
+      display: '/img/assets/battrang-display.webp',
+      gallery: ['/img/assets/battrang-2.webp', '/img/assets/battrang-3.webp'],
     },
     credential: {
       id: 'CRED-002',
