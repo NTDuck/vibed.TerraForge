@@ -1,3 +1,4 @@
+import './theme';
 import './style.css';
 import { commit, getState, subscribe, resetState } from './app';
 import { loadState, clearState } from './persist';

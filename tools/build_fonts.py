@@ -10,8 +10,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 FONT_DIRS = ROOT / 'dist' / 'fonts'
 
 IMPORTS = [
-    ('@fontsource/space-grotesk', ['500', '600', '700']),
-    ('@fontsource/ibm-plex-sans', ['400', '500', '600']),
+    ('@fontsource/inter', ['400', '500', '600', '700']),
     ('@fontsource/jetbrains-mono', ['400']),
 ]
 

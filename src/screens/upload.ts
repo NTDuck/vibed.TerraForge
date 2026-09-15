@@ -68,6 +68,7 @@ function uploadForm(): HTMLElement {
             model: model.value,
             similarity: Number(sim.value),
             traceability: Number(trace.value),
+            platforms: [],
           });
           asset = r.asset;
           return r.state;

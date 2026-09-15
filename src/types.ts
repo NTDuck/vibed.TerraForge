@@ -21,6 +21,8 @@ export interface Verification {
   model: string;
   /** human-readable assessment reasons (set at scan time) */
   reasons?: string[];
+  /** second verification layer: per-engine compatibility run */
+  compat?: CompatRun;
 }
 
 export interface Review {
@@ -45,6 +47,29 @@ export interface LicenseTier {
   rights: LicenseRights;
 }
 
+export interface TechSpec {
+  format: string;
+  tris: number;
+  texture: string;
+  animations: number;
+  sizeMb: number;
+}
+
+export interface CompatCriterion {
+  name: string;
+  pass: boolean;
+  detail: string;
+}
+
+export type CompatRunStatus = 'pending' | 'running' | 'verified' | 'needs-review';
+
+export interface CompatRun {
+  platforms: string[];
+  results: Record<string, CompatCriterion[]>;
+  status: CompatRunStatus;
+  ranAt?: string;
+}
+
 export interface Passport {
   platforms: string[];
   formats: string[];
@@ -58,8 +83,13 @@ export interface Asset {
   creatorId: string;
   model: string;
   /** dec: legacy emoji field, superseded by lib/glyph glyphFor(kind). Optional for stored-state compat. */
-  preview?: string;
   verification: Verification;
+  /** technical spec feeding the compatibility layer */
+  spec?: TechSpec;
+  /** display + gallery image paths (served from repo root) */
+  images?: { display: string; gallery: string[] };
+  /** mint-time soulbound credential (non-transferable ERC-721) */
+  credential?: Credential;
   review?: Review;
   passport: Passport;
   tiers: LicenseTier[];
@@ -69,13 +99,31 @@ export interface Asset {
   createdAt: string;
 }
 
-export interface LicenseNft {
+export type TxStatus = 'confirmed' | 'reverted';
+
+export interface ContractCall {
+  contract: string;
+  fn: string;
+  args: string[];
+  require?: string;
+  revert?: string;
+}
+
+
+
+export interface Credential {
   id: string;
-  assetId: string;
-  tierId: string;
-  ownerId: string;
-  serial: number;
-  issuedAt: string;
+  standard: string;
+  network: string;
+  contractAddress: string;
+  tokenId: string;
+  issuer: string;
+  holder: string;
+  type: string;
+  issueDate: string;
+  status: string;
+  transferable: false;
+  verificationRecord: string;
   txHash: string;
 }
 
@@ -88,17 +136,9 @@ export type TxKind =
   | 'review'
   | 'payment'
   | 'verify-payment'
-  | 'usage';
-
-export type TxStatus = 'confirmed' | 'reverted';
-
-export interface ContractCall {
-  contract: string;
-  fn: string;
-  args: string[];
-  require?: string;
-  revert?: string;
-}
+  | 'usage'
+  | 'compat-check'
+  | 'compat-review';
 
 export interface Tx {
   id: string;
@@ -109,6 +149,18 @@ export interface Tx {
   detail: string;
   status: TxStatus;
   call?: ContractCall;
+}
+
+export interface LicenseNft {
+  id: string;
+  assetId: string;
+  tierId: string;
+  ownerId: string;
+  serial: number;
+  issuedAt: string;
+  txHash: string;
+  /** times this license has been resold (enforced by CONFIG.maxResales) */
+  resaleCount: number;
 }
 
 export interface Split {

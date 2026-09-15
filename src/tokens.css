@@ -1,32 +1,49 @@
-/* Sen Lotus design tokens — locked system for all screens (see style.css header stamp).
- * Import order matters: tokens first, then style.css (or let style.css inline-include them). */
+/* TerraForge design tokens - locked system for all screens.
+ * Structure: AWS-console grammar (flat cards, 1px lines, small radii) on a dark base.
+ * Baseline: Tiffany-blue accent, base16 slots --b00..--b15 with oklch fallbacks below.
+ * Themes: runtime swap of every palette token via src/theme.ts (base16 data in src/themes.ts).
+ * Default: flexoki-light. Picker also lists custom 'terraforge-tiffany' dark scheme.
+ * Fonts: Inter substitutes Amazon Ember (license-locked); JetBrains Mono stays for mono. */
 
 :root {
-  /* paper + ink */
-  --paper: oklch(0.155 0.015 285);
-  --paper-2: oklch(0.195 0.02 285);
-  --paper-3: oklch(0.25 0.025 285);
-  --ink: oklch(0.94 0.008 285);
-  --ink-dim: oklch(0.75 0.015 285);
-  --ink-faint: oklch(0.56 0.02 285);
+  /* base16 slots - fallbacks are TerraForge dark approximations, before JS runs */
+  --b00: oklch(0.19 0.01 90);
+  --b01: oklch(0.23 0.012 90);
+  --b02: oklch(0.3 0.015 90);
+  --b03: oklch(0.42 0.015 90);
+  --b04: oklch(0.63 0.012 90);
+  --b05: oklch(0.87 0.01 90);
+  --b06: oklch(0.91 0.01 90);
+  --b07: oklch(0.95 0.008 90);
+  --b08: oklch(0.6 0.16 25);
+  --b09: oklch(0.68 0.14 60);
+  --b0A: oklch(0.7 0.13 85);
+  --b0B: oklch(0.66 0.12 125);
+  --b0C: oklch(0.7 0.11 180);
+  --b0D: oklch(0.825 0.085 188);
+  --b0E: oklch(0.62 0.14 300);
+  --b0F: oklch(0.7 0.13 320);
 
-  /* accent — lotus magenta */
-  --accent: oklch(0.74 0.17 350);
-  --accent-strong: oklch(0.64 0.19 350);
-  --accent-ink: oklch(0.16 0.07 350);
-  --accent-soft: color-mix(in oklch, var(--accent) 13%, var(--paper-2));
-
-  /* status */
-  --ok: oklch(0.8 0.15 160);
-  --warn: oklch(0.82 0.15 80);
-  --err: oklch(0.72 0.18 25);
-
-  --line: oklch(0.31 0.02 285);
-  --line-strong: oklch(0.4 0.025 285);
+  /* derived roles reference the slots above (theme.ts sets --bXX at runtime) */
+  --paper: var(--b00, oklch(0.19 0.01 90));
+  --paper-2: var(--b01, oklch(0.23 0.012 90));
+  --paper-3: var(--b02, oklch(0.3 0.015 90));
+  --ink: var(--b05, oklch(0.87 0.01 90));
+  --ink-dim: var(--b04, oklch(0.63 0.012 90));
+  --ink-faint: var(--b03, oklch(0.42 0.015 90));
+  --line: var(--b03, oklch(0.42 0.015 90));
+  --line-strong: var(--b04, oklch(0.63 0.012 90));
+  --accent: var(--b0D, oklch(0.825 0.085 188));
+  --accent-strong: color-mix(in oklab, var(--accent) 82%, black);
+  --accent-ink: color-mix(in oklab, var(--b00) 96%, black);
+  --accent-soft: color-mix(in oklab, var(--accent) 13%, var(--paper-2));
+  --ok: var(--b0B, oklch(0.66 0.12 125));
+  --warn: var(--b09, oklch(0.68 0.14 60));
+  --err: var(--b08, oklch(0.6 0.16 25));
 
   /* type */
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
@@ -40,9 +57,9 @@
   --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
 
   /* shape + motion */
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 8px;
   --dur-fast: 120ms;
   --dur: 180ms;
   --dur-slow: 280ms;

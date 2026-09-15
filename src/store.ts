@@ -3,13 +3,17 @@ import { assess } from './lib/verification';
 import { checkRights, type Usage } from './lib/license';
 import { splitPrimary, splitSecondary } from './lib/royalties';
 import { now, txHash, uid } from './lib/id';
+import { compatVerdict, runCompat } from './lib/compatibility';
 import { CREATOR, REVIEWER } from './seed';
 import type {
   Asset,
+  CompatRun,
+  Credential,
   LicenseNft,
   LicenseTier,
   Sale,
   State,
+  TechSpec,
   Tx,
   TxKind,
   User,
@@ -61,8 +65,6 @@ export function logout(s: State): State {
   return { ...s, session: null };
 }
 
-// ---------- verification pipeline ----------
-
 export function submitAsset(
   s: State,
   input: {
@@ -72,6 +74,8 @@ export function submitAsset(
     model: string;
     similarity: number;
     traceability: number;
+    spec?: TechSpec;
+    platforms: string[];
   },
 ): { state: State; asset: Asset } {
   const scan: Verification = {
@@ -93,8 +97,13 @@ export function submitAsset(
     listed: false,
     createdAt: now(),
   };
+  if (input.spec) asset.spec = input.spec;
+  if (input.platforms.length) {
+    const compat: CompatRun = { platforms: input.platforms, results: {}, status: 'pending' };
+    asset.verification = { ...scan, compat };
+  }
   const next = { ...s, assets: [...s.assets, asset] };
-  emit(next, 'ai-scan', `AI provenance scan — "${input.name}"`, 'Off-chain: SenDiffusion perceptual match + source audit');
+  emit(next, 'ai-scan', `AI provenance scan — "${input.name}"`, 'Off-chain: TerraDiffusion perceptual match + source audit');
   return { state: next, asset };
 }
 
@@ -156,7 +165,11 @@ export function saveTiers(s: State, assetId: string, tiers: LicenseTier[]): Stat
 export function mint(s: State, assetId: string): { state: State; asset: Asset; tx: Tx } {
   const asset = s.assets.find((a) => a.id === assetId);
   if (!asset) throw new Error('asset not found');
-  const tokenId = `SNG #${String(s.assets.filter((a) => a.tokenId).length + 1).padStart(3, '0')}`;
+  if (asset.verification.status !== 'verified' || asset.verification.compat?.status !== 'verified') {
+    throw new Error('Mint blocked: both verification layers must pass (AI provenance + compatibility).');
+  }
+  const minted = s.assets.filter((a) => a.tokenId);
+  const tokenId = `SNG #${String(minted.length + 1).padStart(3, '0')}`;
   const tx = emit(
     s,
     'mint',
@@ -164,8 +177,65 @@ export function mint(s: State, assetId: string): { state: State; asset: Asset; t
     `${CONFIG.chain.asset}.register(hash(${asset.id})) — creator ${s.users[asset.creatorId]?.name ?? asset.creatorId}`,
     { onChain: true, call: { contract: CONFIG.chain.asset, fn: 'register', args: [asset.id] } },
   );
-  const assets = s.assets.map((a) => (a.id === assetId ? { ...a, tokenId, mintTx: tx.id, listed: true } : a));
-  return { state: { ...s, assets }, asset: { ...asset, tokenId, mintTx: tx.id, listed: true }, tx };
+  const credential: Credential = {
+    id: `CRED-${String(minted.length + 1).padStart(3, '0')}`,
+    standard: 'ERC-721 (non-transferable)',
+    network: CONFIG.chain.network,
+    contractAddress: '0x82A...91F',
+    tokenId,
+    issuer: 'Verified Marketplace Authority',
+    holder: s.users[asset.creatorId]?.address ?? asset.creatorId,
+    type: 'Verified Creator Credential',
+    issueDate: now(),
+    status: 'Active',
+    transferable: false,
+    verificationRecord: 'Verified',
+    txHash: tx.id,
+  };
+  const assets = s.assets.map((a) => (a.id === assetId ? { ...a, tokenId, mintTx: tx.id, listed: true, credential } : a));
+  return { state: { ...s, assets }, asset: { ...asset, tokenId, mintTx: tx.id, listed: true, credential }, tx };
+}
+
+// ---------- compatibility pipeline ----------
+
+export function startCompat(s: State, assetId: string): { state: State; asset: Asset } {
+  const asset = s.assets.find((a) => a.id === assetId);
+  if (!asset) throw new Error('asset not found');
+  if (!asset.verification.compat) return { state: s, asset };
+  const compat: CompatRun = { ...asset.verification.compat, status: 'running' };
+  const verification: Verification = { ...asset.verification, compat };
+  const assets = s.assets.map((a) => (a.id === assetId ? { ...a, verification } : a));
+  return { state: { ...s, assets }, asset: { ...asset, verification } };
+}
+
+export function finishCompat(s: State, assetId: string): { state: State; asset: Asset } {
+  const asset = s.assets.find((a) => a.id === assetId);
+  if (!asset) throw new Error('asset not found');
+  const run = asset.verification.compat;
+  if (!run || !asset.spec) return { state: s, asset };
+  const { results, failed } = runCompat(asset.spec, run.platforms);
+  const status = compatVerdict(failed);
+  const total = Object.values(results).reduce((n, cs) => n + cs.length, 0);
+  const compat: CompatRun = { ...run, results, status, ranAt: now() };
+  const verification: Verification = { ...asset.verification, compat };
+  const assets = s.assets.map((a) => (a.id === assetId ? { ...a, verification } : a));
+  const next = { ...s, assets };
+  if (failed > 0) {
+    emit(
+      next,
+      'compat-review',
+      `Compatibility review — "${asset.name}"`,
+      `${failed} of ${run.platforms.length} criteria failed across platforms - routed to human reviewer`,
+    );
+  } else {
+    emit(
+      next,
+      'compat-check',
+      `Compatibility verified — "${asset.name}"`,
+      `All ${total} criteria pass (platforms: ${run.platforms.join(', ')})`,
+    );
+  }
+  return { state: next, asset: { ...asset, verification } };
 }
 
 // ---------- purchase / licensing ----------
@@ -238,6 +308,7 @@ export function issueLicense(
     serial: s.licenses.filter((l) => l.assetId === assetId).length + 1,
     issuedAt: now(),
     txHash: txHash(),
+    resaleCount: 0,
   };
   const sale: Sale = {
     id: uid('sale'),
@@ -271,6 +342,18 @@ export function transferLicense(s: State, licenseId: string, toUserId: string, p
     return { state: s, error: 'LicenseEnforcer reverted: this license tier does not grant resale rights.' };
   }
 
+  // Smart-contract guard: resale count cap enforced by LicenseEnforcer (revert path).
+  if (license.resaleCount >= CONFIG.maxResales) {
+    emit(
+      s,
+      'resale',
+      `Resale revert — "${asset.name}"`,
+      `${CONFIG.chain.enforcer}.resale() reverted: resale limit (${CONFIG.maxResales}) reached - this license cannot be resold again`,
+      { onChain: true, status: 'reverted', call: { contract: CONFIG.chain.enforcer, fn: 'resale', args: [licenseId], require: 'resaleCount < maxResales', revert: 'resaleLimitReached' } },
+    );
+    return { state: s, error: 'LicenseEnforcer reverted: resale limit reached - no further reselling is allowed.' };
+  }
+
   const price = priceVnd > 0 ? priceVnd : tier.priceVnd;
   if (!pay(s, toUserId, price)) {
     return { state: s, error: `Buyer has insufficient VND (${price.toLocaleString('vi-VN')}₫ required).` };
@@ -288,7 +371,7 @@ export function transferLicense(s: State, licenseId: string, toUserId: string, p
   for (const sp of splits) {
     emit(s, 'royalty', `Split → ${s.users[sp.to]?.name ?? sp.to}`, `${sp.vnd.toLocaleString('vi-VN')}₫ (${sp.kind})`, { onChain: true });
   }
-  const licenses = s.licenses.map((l) => (l.id === licenseId ? { ...l, ownerId: toUserId } : l));
+  const licenses = s.licenses.map((l) => (l.id === licenseId ? { ...l, ownerId: toUserId, resaleCount: l.resaleCount + 1 } : l));
   const sale: Sale = {
     id: uid('sale'),
     assetId: license.assetId,
