@@ -5,8 +5,8 @@
 Option A — Docker (recommended):
 
 ```bash
-docker build -t senchain .
-docker run -p 8080:80 senchain
+docker build -t terraforge .
+docker run -p 8080:80 terraforge
 ```
 
 Then open http://localhost:8080.

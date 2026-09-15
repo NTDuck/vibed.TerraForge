@@ -1,5 +1,5 @@
-# SenChain mockup — single static container.
-# Build: docker build -t senchain .   Run: docker run -p 8080:80 senchain
+# TerraForge mockup — single static container.
+# Build: docker build -t terraforge .   Run: docker run -p 8080:80 terraforge
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json bun.lock* ./
