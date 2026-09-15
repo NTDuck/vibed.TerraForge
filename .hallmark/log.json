@@ -1,4 +1,28 @@
 [
-  { "date": "2026-09-13", "macrostructure": "Workbench (app shell) · Stat-Led market · Long Document strategy", "theme": "custom: Sen Lotus (deep ink, lotus-lit terminal)", "theme_axes": "dark / grotesk-sans / warm-magenta-350", "vibe": "deep ink, lotus-lit terminal", "enrichment": "E2 hand-built SVG glyphs (Tier B)", "brief": "SenChain · blockchain game-asset marketplace mockup redesign v2" },
-  { "date": "2026-09-12", "macrostructure": "Workbench (app shell)", "theme": "Cobalt-family (unloaded fonts, cool-250)", "theme_axes": "dark / grotesk-sans / cool-250", "enrichment": "emoji plates (slop, removed)", "brief": "SenChain v1 initial build" }
+ {
+  "date": "2026-09-15",
+  "macrostructure": "Workbench (app shell) - console grammar",
+  "theme": "Tinted-Theming base16 runtime (339 schemes + terraforge-tiffany; default flexoki-light)",
+  "theme_axes": "dark baseline / AWS-console structure / tiffany-188 accent",
+  "vibe": "AWS console structure, dark baseline, tiffany accent",
+  "enrichment": "E1 asset photography (user-supplied docx renders) + svg glyphs fallback",
+  "brief": "TerraForge - Polygon env-kit marketplace, dual verification, SERSE ledger"
+ },
+ {
+  "date": "2026-09-13",
+  "macrostructure": "Workbench (app shell) · Stat-Led market · Long Document strategy",
+  "theme": "custom: Sen Lotus (deep ink, lotus-lit terminal)",
+  "theme_axes": "dark / grotesk-sans / warm-magenta-350",
+  "vibe": "deep ink, lotus-lit terminal",
+  "enrichment": "E2 hand-built SVG glyphs (Tier B)",
+  "brief": "SenChain · blockchain game-asset marketplace mockup redesign v2"
+ },
+ {
+  "date": "2026-09-12",
+  "macrostructure": "Workbench (app shell)",
+  "theme": "Cobalt-family (unloaded fonts, cool-250)",
+  "theme_axes": "dark / grotesk-sans / cool-250",
+  "enrichment": "emoji plates (slop, removed)",
+  "brief": "SenChain v1 initial build"
+ }
 ]
